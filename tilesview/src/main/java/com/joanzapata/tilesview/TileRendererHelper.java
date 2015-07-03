@@ -1,10 +1,13 @@
 package com.joanzapata.tilesview;
 
+import android.graphics.Canvas;
 import android.graphics.RectF;
 
 public class TileRendererHelper {
 
-    private final int sourceWidth, sourceHeight;
+    private final float sourceWidth, sourceHeight;
+
+    private final SizeConverter sizeConverter = new SizeConverter();
 
     public TileRendererHelper(int sourceWidth, int sourceHeight) {
         this.sourceWidth = sourceWidth;
@@ -41,5 +44,38 @@ public class TileRendererHelper {
                 sourceWidth * (x + diffX + width) * xRatio,
                 sourceHeight * (y + diffY + height) * yRatio
         );
+    }
+
+    public SizeConverter translateCanvasAndGetConverter(Canvas canvas, float scale, float overallWidth, float overallHeight) {
+
+        // Try using source width as reference
+        float translateX, translateY;
+        float scaledSourceHeight = overallWidth * sourceHeight / sourceWidth;
+        float sourceRatioOnZoom1;
+        if (scaledSourceHeight <= overallHeight) {
+            sourceRatioOnZoom1 = overallWidth / sourceWidth;
+            translateX = 0;
+            translateY = (overallHeight - sourceHeight * sourceRatioOnZoom1) / 2f * scale;
+        } else {
+            sourceRatioOnZoom1 = overallHeight / sourceHeight;
+            translateX = (overallWidth - sourceWidth * sourceRatioOnZoom1) / 2f * scale;
+            translateY = 0;
+        }
+
+        canvas.translate(translateX, translateY);
+
+        sizeConverter.scale = scale;
+        sizeConverter.sourceRatioOnZoom1 = sourceRatioOnZoom1;
+        return sizeConverter;
+    }
+
+
+    public static class SizeConverter {
+
+        private float scale, sourceRatioOnZoom1;
+
+        float convert(float pixelSize) {
+            return pixelSize * sourceRatioOnZoom1 * scale;
+        }
     }
 }

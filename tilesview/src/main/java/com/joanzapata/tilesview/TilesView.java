@@ -8,6 +8,9 @@ import android.view.View;
 import com.joanzapata.tilesview.internal.TilePool;
 import com.joanzapata.tilesview.util.ScrollAndZoomDetector;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener {
 
     public static final int TILE_SIZE = 256;
@@ -34,6 +37,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private ScrollAndZoomDetector scrollAndZoomDetector;
     private RectF reusableRect = new RectF();
+    private List<Layer> layers = new ArrayList<Layer>();
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -52,6 +56,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         backgroundPaint = new Paint();
         backgroundPaint.setColor(Color.BLACK);
         backgroundPaint.setStyle(Paint.Style.FILL);
+    }
+
+    public void addLayer(Layer layer) {
+        layers.add(layer);
     }
 
     @Override
@@ -110,6 +118,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             }
         }
 
+        // Render user layers
+        for (int i = 0, size = layers.size(); i < size; i++) {
+            Layer layer = layers.get(i);
+            canvas.save();
+            layer.renderLayer(canvas, zoom, getWidth(), getHeight());
+            canvas.restore();
+        }
+
         canvas.restore();
     }
 
@@ -150,4 +166,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 float width, float height,
                 float overallWidth, float overallHeight);
     }
+
+    public interface Layer {
+        void renderLayer(Canvas canvas, float scale,
+                float overallWidth, float overallHeight);
+    }
+
 }
