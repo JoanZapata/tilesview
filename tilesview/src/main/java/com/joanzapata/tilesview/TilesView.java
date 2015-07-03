@@ -160,16 +160,4 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         invalidate();
     }
 
-    public interface TileRenderer {
-        void renderTile(Canvas canvas,
-                float x, float y,
-                float width, float height,
-                float overallWidth, float overallHeight);
-    }
-
-    public interface Layer {
-        void renderLayer(Canvas canvas, float scale,
-                float overallWidth, float overallHeight);
-    }
-
 }

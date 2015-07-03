@@ -3,13 +3,13 @@ package com.joanzapata.tilesview.internal;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.SparseArray;
-import com.joanzapata.tilesview.TilesView;
+import com.joanzapata.tilesview.TileRenderer;
 
 import static com.joanzapata.tilesview.TilesView.TILE_SIZE;
 
 public class TilePool {
 
-    private TilesView.TileRenderer tileRenderer;
+    private TileRenderer tileRenderer;
 
     private SparseArray<Tile[][]> tilesByZoomLevel;
 
@@ -57,11 +57,11 @@ public class TilePool {
         return tile.bitmap;
     }
 
-    public void setTileRenderer(TilesView.TileRenderer tileRenderer) {
+    public void setTileRenderer(TileRenderer tileRenderer) {
         this.tileRenderer = tileRenderer;
     }
 
-    public TilesView.TileRenderer getTileRenderer() {
+    public TileRenderer getTileRenderer() {
         return tileRenderer;
     }
 
