@@ -6,7 +6,9 @@ import android.os.Bundle;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
 import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
 
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class MainActivity extends Activity {
 
@@ -17,10 +19,11 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tilesView = (TilesView) findViewById(R.id.tilesView);
+        InputStream inputStream = null;
 
-        final Bitmap bitmap;
         try {
-            bitmap = BitmapFactory.decodeStream(getResources().getAssets().open("world.jpg"));
+            inputStream = getResources().getAssets().open("world.jpg");
+            final BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(inputStream, false);
             final Rect destRect = new Rect();
             final Rect sourceRect = new Rect();
             final Paint paint = new Paint();
@@ -29,7 +32,9 @@ public class MainActivity extends Activity {
             circlePaint.setColor(Color.RED);
             circlePaint.setAntiAlias(true);
 
-            tilesView.setTileRenderer(new FixedImageSizeTileRenderer(bitmap.getWidth(), bitmap.getHeight()) {
+            final int sourceWidth = decoder.getWidth();
+            final int sourceHeight = decoder.getHeight();
+            tilesView.setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
                 @Override
                 public void renderTile(Canvas canvas, RectF sourceRectF) {
                     sourceRect.set(
@@ -37,11 +42,20 @@ public class MainActivity extends Activity {
                             (int) sourceRectF.right, (int) sourceRectF.bottom
                     );
                     destRect.set(0, 0, canvas.getWidth(), canvas.getHeight());
-                    canvas.drawBitmap(bitmap, sourceRect, destRect, paint);
+
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.outWidth = canvas.getWidth();
+                    options.outHeight = canvas.getHeight();
+                    options.inPreferredConfig = Bitmap.Config.RGB_565;
+                    options.inPreferQualityOverSpeed = true;
+                    Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
+                    canvas.drawBitmap(tmpBitmap, null, destRect, paint);
+                    tmpBitmap.recycle();
+
                 }
             });
 
-            tilesView.addLayer(new LayerOnFixedImageSize(bitmap.getWidth(), bitmap.getHeight()) {
+            tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
                 @Override
                 public void renderLayer(Canvas canvas) {
                     canvas.drawCircle(
@@ -53,6 +67,18 @@ public class MainActivity extends Activity {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            quietClose(inputStream);
+        }
+    }
+
+    private void quietClose(Closeable closeable) {
+        if (closeable != null) {
+            try {
+                closeable.close();
+            } catch (IOException e) {
+                // Quiet
+            }
         }
     }
 }

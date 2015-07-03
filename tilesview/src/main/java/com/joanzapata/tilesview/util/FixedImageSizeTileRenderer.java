@@ -44,6 +44,13 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
                 sourceHeight * (y + diffY + height) * yRatio
         );
 
+        if (sourceRect.right <= 0 ||
+                sourceRect.left >= sourceWidth ||
+                sourceRect.bottom <= 0 ||
+                sourceRect.top >= sourceHeight) {
+            return;
+        }
+
         // Call user code
         renderTile(canvas, sourceRect);
 
