@@ -1,6 +1,6 @@
 package com.joanzapata.tilesview;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 
 public class TileRendererHelper {
 
@@ -11,7 +11,7 @@ public class TileRendererHelper {
         this.sourceHeight = sourceHeight;
     }
 
-    public void computeSourceRect(Rect sourceRect,
+    public void computeSourceRect(RectF sourceRect,
             float x, float y,
             float width, float height,
             float overallWidth, float overallHeight) {
@@ -36,10 +36,10 @@ public class TileRendererHelper {
 
         // Create the rectangle on the image
         sourceRect.set(
-                (int) (sourceWidth * (x + diffX) * xRatio),
-                (int) (sourceHeight * (y + diffY) * yRatio),
-                (int) (sourceWidth * (x + diffX + width) * xRatio),
-                (int) (sourceHeight * (y + diffY + height) * yRatio)
+                sourceWidth * (x + diffX) * xRatio,
+                sourceHeight * (y + diffY) * yRatio,
+                sourceWidth * (x + diffX + width) * xRatio,
+                sourceHeight * (y + diffY + height) * yRatio
         );
     }
 }
