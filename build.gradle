@@ -16,4 +16,24 @@ allprojects {
     repositories {
         jcenter()
     }
+
+    apply plugin: 'maven'
+    group = 'com.joanzapata.tilesview'
+    version = '0.0.1-SNAPSHOT'
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                repository(url: deploymentRepositoryUrl) {
+                    authentication(userName: deploymentUsername, password: deploymentPassword)
+                }
+                snapshotRepository(url: deploymentSnapshotRepositoryUrl) {
+                    authentication(userName: deploymentUsername, password: deploymentPassword)
+                }
+                pom.version = project.version
+                pom.artifactId = project.name
+                pom.groupId = project.group
+            }
+        }
+    }
 }
