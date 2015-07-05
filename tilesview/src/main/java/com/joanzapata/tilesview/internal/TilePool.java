@@ -22,9 +22,10 @@ public class TilePool {
         // Get the tiles array for the given zoom (or create it)
         Tile[][] tiles = tilesByZoomLevel.get(zoomLevel);
         if (tiles == null) {
-            tiles = new Tile
-                    [(int) Math.ceil(screenWidth * (zoomLevel / 10f) / TILE_SIZE) + 1]
-                    [(int) Math.ceil(screenHeight * (zoomLevel / 10f) / TILE_SIZE) + 1];
+            // Math.ceil(contentWidth * zoom / TILE_SIZE) - 1
+            int xCells = (int) Math.ceil(screenWidth * (zoomLevel / 10f) / TILE_SIZE);
+            int yCells = (int) Math.ceil(screenHeight * (zoomLevel / 10f) / TILE_SIZE);
+            tiles = new Tile[xCells][yCells];
             tilesByZoomLevel.put(zoomLevel, tiles);
         }
 
