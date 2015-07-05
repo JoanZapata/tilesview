@@ -46,7 +46,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         this.zoomLevel = (int) (this.scale * 10);
         this.offsetX = -getPaddingLeft();
         this.offsetY = -getPaddingTop();
-        this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this);
+        this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
         debugPaint = new Paint();
         debugPaint.setAntiAlias(true);
         debugPaint.setColor(Color.GRAY);

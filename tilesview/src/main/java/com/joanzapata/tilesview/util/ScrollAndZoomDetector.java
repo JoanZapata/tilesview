@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.View;
+import android.widget.OverScroller;
 
 public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener {
 
@@ -13,15 +15,25 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     private final ScaleGestureDetector scaleGestureDetector;
 
-    public ScrollAndZoomDetector(Context context, ScrollAndZoomListener scrollAndZoomListener) {
+    private final OverScroller overScroller;
+
+    private final Context context;
+    private final View referenceView;
+
+    public ScrollAndZoomDetector(Context context, View referenceView, ScrollAndZoomListener scrollAndZoomListener) {
+        this.context = context;
+        this.referenceView = referenceView;
         this.gestureDetector = new GestureDetector(context, this);
         this.gestureDetector.setIsLongpressEnabled(false);
         this.scaleGestureDetector = new ScaleGestureDetector(context, this);
         this.scrollAndZoomListener = scrollAndZoomListener;
+        this.overScroller = new OverScroller(context);
     }
 
     @Override
     public boolean onDown(MotionEvent e) {
+        if (overScroller != null)
+            overScroller.forceFinished(true);
         return true;
     }
 
@@ -46,8 +58,32 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
     }
 
     @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        return false;
+    public boolean onFling(final MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Runnable animation = new Runnable() {
+
+            float currX = e1.getX();
+            float currY = e1.getY();
+
+            @Override
+            public void run() {
+                if (overScroller.computeScrollOffset() && !overScroller.isFinished()) {
+                    scrollAndZoomListener.onScroll(
+                            currX - overScroller.getCurrX(),
+                            currY - overScroller.getCurrY());
+                    currX = overScroller.getCurrX();
+                    currY = overScroller.getCurrY();
+                    referenceView.postOnAnimation(this);
+                }
+            }
+        };
+
+        overScroller.fling((int) e1.getX(), (int) e1.getY(),
+                (int) velocityX, (int) velocityY,
+                -Integer.MAX_VALUE, Integer.MAX_VALUE,
+                -Integer.MAX_VALUE, Integer.MAX_VALUE);
+
+        referenceView.postOnAnimation(animation);
+        return true;
     }
 
     public boolean onTouchEvent(MotionEvent event) {
