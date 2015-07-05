@@ -17,7 +17,7 @@ public class TilePool {
         tilesByZoomLevel = new SparseArray<Tile[][]>();
     }
 
-    public Bitmap getTile(int zoomLevel, int x, int y, int screenWidth, int screenHeight) {
+    public Bitmap getTile(int zoomLevel, int x, int y, float screenWidth, float screenHeight) {
 
         // Get the tiles array for the given zoom (or create it)
         Tile[][] tiles = tilesByZoomLevel.get(zoomLevel);

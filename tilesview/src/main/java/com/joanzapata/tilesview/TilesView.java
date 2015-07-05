@@ -44,8 +44,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         this.tilePool = new TilePool();
         this.zoom = 1;
         this.zoomLevel = (int) (this.zoom * 10);
-        this.offsetX = 0;
-        this.offsetY = 0;
+        this.offsetX = -getPaddingLeft();
+        this.offsetY = -getPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this);
         debugPaint = new Paint();
         debugPaint.setAntiAlias(true);
@@ -66,6 +66,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+        float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+
         canvas.save();
         canvas.translate(-offsetX, -offsetY);
 
@@ -81,12 +84,16 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         // Adjustments for edge cases
         if (offsetXOnImage < 0) xStart--;
         if (offsetYOnImage < 0) yStart--;
+        xStart = Math.max(0, xStart);
+        yStart = Math.max(0, yStart);
+        xStop = (int) Math.min(Math.ceil(contentWidth * zoom / TILE_SIZE) - 1, xStop);
+        yStop = (int) Math.min(Math.ceil(contentHeight * zoom / TILE_SIZE) - 1, yStop);
 
         // Loop through tiles
         for (int x = xStart; x <= xStop; x++) {
             for (int y = yStart; y <= yStop; y++) {
 
-                Bitmap tile = tilePool.getTile(zoomLevel, x, y, getWidth(), getHeight());
+                Bitmap tile = tilePool.getTile(zoomLevel, x, y, contentWidth, contentHeight);
                 float left = x * TILE_SIZE * zoomDiff;
                 float top = y * TILE_SIZE * zoomDiff;
 
@@ -122,7 +129,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         for (int i = 0, size = layers.size(); i < size; i++) {
             Layer layer = layers.get(i);
             canvas.save();
-            layer.renderLayer(canvas, zoom, getWidth(), getHeight());
+            layer.renderLayer(canvas, zoom, contentWidth, contentHeight);
             canvas.restore();
         }
 

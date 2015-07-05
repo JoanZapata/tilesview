@@ -59,9 +59,9 @@ public class MainActivity extends Activity {
                 @Override
                 public void renderLayer(Canvas canvas) {
                     canvas.drawCircle(
-                            scaled(570),
-                            scaled(281),
-                            scaled(15), circlePaint);
+                            scaled(2750),
+                            scaled(600),
+                            30, circlePaint);
                 }
             });
 
