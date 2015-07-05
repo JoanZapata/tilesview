@@ -7,6 +7,7 @@ import com.joanzapata.tilesview.TileRenderer;
 public abstract class FixedImageSizeTileRenderer implements TileRenderer {
 
     private final float sourceWidth, sourceHeight;
+
     private final RectF sourceRect;
 
     public FixedImageSizeTileRenderer(float sourceWidth, float sourceHeight) {
@@ -16,32 +17,35 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
     }
 
     @Override
-    public final void renderTile(Canvas canvas, float x, float y, float width, float height, float overallWidth, float overallHeight) {
+    public final void renderTile(Canvas canvas,
+            float xRatio, float yRatio,
+            float widthRatio, float heightRatio,
+            float contentInitialWidth, float contentInitialHeight) {
 
-        float diffX, diffY;
-        float xRatio, yRatio;
+        float xDiff, yDiff;
+        float xFactor, yFactor;
 
         // Try using source width as reference
-        float scaledSourceHeight = overallWidth * sourceHeight / sourceWidth;
-        if (scaledSourceHeight <= overallHeight) {
-            diffX = 0f;
-            diffY = -(overallHeight - scaledSourceHeight) / 2f / overallHeight;
-            xRatio = 1f;
-            yRatio = overallHeight / scaledSourceHeight;
+        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
+        if (scaledSourceHeight <= contentInitialHeight) {
+            xDiff = 0f;
+            yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
+            xFactor = 1f;
+            yFactor = contentInitialHeight / scaledSourceHeight;
         } else {
-            float scaledSourceWidth = overallHeight * sourceWidth / sourceHeight;
-            diffX = -(overallWidth - scaledSourceWidth) / 2f / overallWidth;
-            diffY = 0f;
-            xRatio = overallWidth / scaledSourceWidth;
-            yRatio = 1f;
+            float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
+            xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
+            yDiff = 0f;
+            xFactor = contentInitialWidth / scaledSourceWidth;
+            yFactor = 1f;
         }
 
         // Create the rectangle on the image
         sourceRect.set(
-                sourceWidth * (x + diffX) * xRatio,
-                sourceHeight * (y + diffY) * yRatio,
-                sourceWidth * (x + diffX + width) * xRatio,
-                sourceHeight * (y + diffY + height) * yRatio
+                sourceWidth * (xRatio + xDiff) * xFactor,
+                sourceHeight * (yRatio + yDiff) * yFactor,
+                sourceWidth * (xRatio + xDiff + widthRatio) * xFactor,
+                sourceHeight * (yRatio + yDiff + heightRatio) * yFactor
         );
 
         if (sourceRect.right <= 0 ||

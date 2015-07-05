@@ -17,40 +17,40 @@ public class TilePool {
         tilesByZoomLevel = new SparseArray<Tile[][]>();
     }
 
-    public Bitmap getTile(int zoomLevel, int x, int y, float screenWidth, float screenHeight) {
+    public Bitmap getTile(int zoomLevel, int xIndex, int yIndex, float contentWidth, float contentHeight) {
 
         // Get the tiles array for the given zoom (or create it)
         Tile[][] tiles = tilesByZoomLevel.get(zoomLevel);
         if (tiles == null) {
             // Math.ceil(contentWidth * zoom / TILE_SIZE) - 1
-            int xCells = (int) Math.ceil(screenWidth * (zoomLevel / 10f) / TILE_SIZE);
-            int yCells = (int) Math.ceil(screenHeight * (zoomLevel / 10f) / TILE_SIZE);
+            int xCells = (int) Math.ceil(contentWidth * (zoomLevel / 10f) / TILE_SIZE);
+            int yCells = (int) Math.ceil(contentHeight * (zoomLevel / 10f) / TILE_SIZE);
             tiles = new Tile[xCells][yCells];
             tilesByZoomLevel.put(zoomLevel, tiles);
         }
 
         // Make sure the requested tile is not out of bounds
-        if (x < 0 || y < 0 || x >= tiles.length || y >= tiles[0].length)
+        if (xIndex < 0 || yIndex < 0 || xIndex >= tiles.length || yIndex >= tiles[0].length)
             return null;
 
         // Get it
-        Tile tile = tiles[x][y];
+        Tile tile = tiles[xIndex][yIndex];
 
         // If null, create it
         if (tile == null) {
-            tile = new Tile(zoomLevel, x, y);
-            tiles[x][y] = tile;
+            tile = new Tile(zoomLevel, xIndex, yIndex);
+            tiles[xIndex][yIndex] = tile;
 
             // Create its bitmap
             Bitmap bitmap = Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
             Canvas canvas = new Canvas(bitmap);
             float zoom = zoomLevel / 10f;
             tileRenderer.renderTile(canvas,
-                    x * TILE_SIZE / zoom / screenWidth,
-                    y * TILE_SIZE / zoom / screenHeight,
-                    TILE_SIZE / zoom / screenWidth,
-                    TILE_SIZE / zoom / screenHeight,
-                    screenWidth, screenHeight);
+                    xIndex * TILE_SIZE / zoom / contentWidth,
+                    yIndex * TILE_SIZE / zoom / contentHeight,
+                    TILE_SIZE / zoom / contentWidth,
+                    TILE_SIZE / zoom / contentHeight,
+                    contentWidth, contentHeight);
             tile.bitmap = bitmap;
         }
 

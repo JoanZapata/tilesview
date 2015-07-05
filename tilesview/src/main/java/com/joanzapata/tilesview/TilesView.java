@@ -17,8 +17,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public static final boolean SHOW_DEBUG = true;
 
-    /** Initial zoom is 1, zoom can't be < 1 */
-    private float zoom;
+    /** Initial scale is 1, scale can't be < 1 */
+    private float scale;
 
     /** X offset of the top left corner of the screen in the global image */
     private float offsetX;
@@ -26,7 +26,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     /** Y offset of the top left corner of the screen in the global image */
     private float offsetY;
 
-    /** Zoom level is zoom * 10 rounded to the nearest integer (e.g. 12 for x1,23) */
+    /** Zoom level is scale * 10 rounded to the nearest integer (e.g. 12 for x1,23) */
     private int zoomLevel;
 
     /** Retains all tiles in memory */
@@ -42,8 +42,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.tilePool = new TilePool();
-        this.zoom = 1;
-        this.zoomLevel = (int) (this.zoom * 10);
+        this.scale = 1;
+        this.zoomLevel = (int) (this.scale * 10);
         this.offsetX = -getPaddingLeft();
         this.offsetY = -getPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this);
@@ -72,30 +72,30 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         canvas.save();
         canvas.translate(-offsetX, -offsetY);
 
-        // Find the top left index for the current zoom and canvas size
-        float zoomDiff = zoom / (zoomLevel / 10f);
-        float offsetXOnImage = offsetX * zoomDiff;
-        float offsetYOnImage = offsetY * zoomDiff;
-        int xStart = (int) (offsetXOnImage / TILE_SIZE);
-        int yStart = (int) (offsetYOnImage / TILE_SIZE);
-        int xStop = (int) ((offsetXOnImage + getWidth()) / TILE_SIZE);
-        int yStop = (int) ((offsetYOnImage + getHeight()) / TILE_SIZE);
+        // Find the top left index for the current scale and canvas size
+        float zoomDiff = scale / (zoomLevel / 10f);
+        float xOffsetOnContent = offsetX * zoomDiff;
+        float yOffsetOnContent = offsetY * zoomDiff;
+        int xIndexStart = (int) (xOffsetOnContent / TILE_SIZE);
+        int yIndexStart = (int) (yOffsetOnContent / TILE_SIZE);
+        int xIndexStop = (int) ((xOffsetOnContent + getWidth()) / TILE_SIZE);
+        int yIndexStop = (int) ((yOffsetOnContent + getHeight()) / TILE_SIZE);
 
         // Adjustments for edge cases
-        if (offsetXOnImage < 0) xStart--;
-        if (offsetYOnImage < 0) yStart--;
-        xStart = Math.max(0, xStart);
-        yStart = Math.max(0, yStart);
-        xStop = (int) Math.min(Math.ceil(contentWidth * zoom / TILE_SIZE) - 1, xStop);
-        yStop = (int) Math.min(Math.ceil(contentHeight * zoom / TILE_SIZE) - 1, yStop);
+        if (xOffsetOnContent < 0) xIndexStart--;
+        if (yOffsetOnContent < 0) yIndexStart--;
+        xIndexStart = Math.max(0, xIndexStart);
+        yIndexStart = Math.max(0, yIndexStart);
+        xIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
+        yIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
 
         // Loop through tiles
-        for (int x = xStart; x <= xStop; x++) {
-            for (int y = yStart; y <= yStop; y++) {
+        for (int xIndex = xIndexStart; xIndex <= xIndexStop; xIndex++) {
+            for (int yIndex = yIndexStart; yIndex <= yIndexStop; yIndex++) {
 
-                Bitmap tile = tilePool.getTile(zoomLevel, x, y, contentWidth, contentHeight);
-                float left = x * TILE_SIZE * zoomDiff;
-                float top = y * TILE_SIZE * zoomDiff;
+                Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
+                float left = xIndex * TILE_SIZE * zoomDiff;
+                float top = yIndex * TILE_SIZE * zoomDiff;
 
                 if (tile != null && !tile.isRecycled()) {
                     reusableRect.set((int) left, (int) top,
@@ -113,7 +113,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     canvas.drawRect(left, top,
                             left + TILE_SIZE * zoomDiff,
                             top + TILE_SIZE * zoomDiff, debugPaint);
-                    canvas.drawText(x + "," + y,
+                    canvas.drawText(xIndex + "," + yIndex,
                             left + TILE_SIZE * zoomDiff / 2,
                             top + TILE_SIZE * zoomDiff / 2 + debugPaint.getTextSize() / 4,
                             debugPaint);
@@ -129,7 +129,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         for (int i = 0, size = layers.size(); i < size; i++) {
             Layer layer = layers.get(i);
             canvas.save();
-            layer.renderLayer(canvas, zoom, contentWidth, contentHeight);
+            layer.renderLayer(canvas, scale, contentWidth, contentHeight);
             canvas.restore();
         }
 
@@ -155,15 +155,15 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public boolean onScale(float scaleFactor) {
-        this.zoom *= scaleFactor;
-        this.zoomLevel = Math.round(this.zoom * 10f);
+        this.scale *= scaleFactor;
+        this.zoomLevel = Math.round(this.scale * 10f);
         invalidate();
         return true;
     }
 
     @Override
     public void onScaleEnd() {
-        this.zoom = this.zoomLevel / 10f;
+        this.scale = this.zoomLevel / 10f;
         invalidate();
     }
 

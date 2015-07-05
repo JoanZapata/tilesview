@@ -7,7 +7,7 @@ public abstract class LayerOnFixedImageSize implements Layer {
 
     private final float sourceWidth, sourceHeight;
 
-    private float sourceRatioOnZoom1, scale;
+    private float sourceInitialRatio, scale;
 
     public LayerOnFixedImageSize(float sourceWidth, float sourceHeight) {
         this.sourceWidth = sourceWidth;
@@ -15,34 +15,34 @@ public abstract class LayerOnFixedImageSize implements Layer {
     }
 
     @Override
-    public final void renderLayer(Canvas canvas, float scale, float overallWidth, float overallHeight) {
+    public final void renderLayer(Canvas canvas, float scale,
+            float contentInitialWidth, float contentInitialHeight) {
 
         // Try using source width as reference
         float translateX, translateY;
-        float scaledSourceHeight = overallWidth * sourceHeight / sourceWidth;
+        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
         float sourceRatioOnZoom1;
-        if (scaledSourceHeight <= overallHeight) {
-            sourceRatioOnZoom1 = overallWidth / sourceWidth;
+        if (scaledSourceHeight <= contentInitialHeight) {
+            sourceRatioOnZoom1 = contentInitialWidth / sourceWidth;
             translateX = 0;
-            translateY = (overallHeight - sourceHeight * sourceRatioOnZoom1) / 2f * scale;
+            translateY = (contentInitialHeight - sourceHeight * sourceRatioOnZoom1) / 2f * scale;
         } else {
-            sourceRatioOnZoom1 = overallHeight / sourceHeight;
-            translateX = (overallWidth - sourceWidth * sourceRatioOnZoom1) / 2f * scale;
+            sourceRatioOnZoom1 = contentInitialHeight / sourceHeight;
+            translateX = (contentInitialWidth - sourceWidth * sourceRatioOnZoom1) / 2f * scale;
             translateY = 0;
         }
 
         canvas.translate(translateX, translateY);
 
         this.scale = scale;
-        this.sourceRatioOnZoom1 = sourceRatioOnZoom1;
+        this.sourceInitialRatio = sourceRatioOnZoom1;
         renderLayer(canvas);
     }
 
     protected float scaled(float pixelSizeOnSourceImage) {
-        return pixelSizeOnSourceImage * sourceRatioOnZoom1 * scale;
+        return pixelSizeOnSourceImage * sourceInitialRatio * scale;
     }
 
     protected abstract void renderLayer(Canvas canvas);
-
 
 }

@@ -4,7 +4,7 @@ import android.graphics.Canvas;
 
 public interface TileRenderer {
     void renderTile(Canvas canvas,
-            float x, float y,
-            float width, float height,
-            float overallWidth, float overallHeight);
+            float xRatio, float yRatio,
+            float widthRatio, float heightRatio,
+            float contentInitialWidth, float contentInitialHeight);
 }
