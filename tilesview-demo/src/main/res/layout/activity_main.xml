@@ -5,6 +5,7 @@
     <com.joanzapata.tilesview.TilesView
         android:id="@+id/tilesView"
         android:padding="40dp"
+        android:background="#fefefe"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

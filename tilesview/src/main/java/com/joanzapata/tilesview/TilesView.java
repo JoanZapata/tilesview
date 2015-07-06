@@ -2,6 +2,7 @@ package com.joanzapata.tilesview;
 
 import android.content.Context;
 import android.graphics.*;
+import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,8 +15,6 @@ import java.util.List;
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener {
 
     public static final int TILE_SIZE = 256;
-
-    public static final boolean SHOW_DEBUG = true;
 
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
@@ -35,18 +34,25 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private Paint debugPaint;
     private Paint backgroundPaint;
 
+    private int backgroundColor;
+
     private ScrollAndZoomDetector scrollAndZoomDetector;
     private RectF reusableRect = new RectF();
     private List<Layer> layers = new ArrayList<Layer>();
+    private boolean debug = false;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        this.tilePool = new TilePool();
+
+        if (getBackground() instanceof ColorDrawable)
+            backgroundColor = ((ColorDrawable) getBackground()).getColor();
+        this.tilePool = new TilePool(backgroundColor);
         this.scale = 1;
         this.zoomLevel = (int) (this.scale * 10);
         this.offsetX = -getPaddingLeft();
         this.offsetY = -getPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
+
         debugPaint = new Paint();
         debugPaint.setAntiAlias(true);
         debugPaint.setColor(Color.GRAY);
@@ -54,18 +60,22 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         debugPaint.setTextAlign(Paint.Align.CENTER);
         debugPaint.setStyle(Paint.Style.STROKE);
         backgroundPaint = new Paint();
-        backgroundPaint.setColor(Color.BLACK);
+        backgroundPaint.setColor(backgroundColor);
         backgroundPaint.setStyle(Paint.Style.FILL);
+        setBackground(null);
     }
 
     public void addLayer(Layer layer) {
         layers.add(layer);
     }
 
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+        invalidate();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
         float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
         float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
 
@@ -84,44 +94,56 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         // Adjustments for edge cases
         if (xOffsetOnContent < 0) xIndexStart--;
         if (yOffsetOnContent < 0) yIndexStart--;
-        xIndexStart = Math.max(0, xIndexStart);
-        yIndexStart = Math.max(0, yIndexStart);
-        xIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
-        yIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
+        int xGridIndexStart = Math.max(0, xIndexStart);
+        int yGridIndexStart = Math.max(0, yIndexStart);
+        int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
+        int yGridIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
 
-        // Loop through tiles
+        // Loop through all tiles visible on the screen
         for (int xIndex = xIndexStart; xIndex <= xIndexStop; xIndex++) {
             for (int yIndex = yIndexStart; yIndex <= yIndexStop; yIndex++) {
 
-                Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
+                // Compute the current tile position on canvas
                 float left = xIndex * TILE_SIZE * zoomDiff;
                 float top = yIndex * TILE_SIZE * zoomDiff;
 
-                if (tile != null && !tile.isRecycled()) {
-                    reusableRect.set((int) left, (int) top,
-                            (int) (left + TILE_SIZE * zoomDiff),
-                            (int) (top + TILE_SIZE * zoomDiff));
-                    canvas.drawBitmap(tile, null, reusableRect, null);
+                // If this tile is not outside the user content
+                if (xIndex >= xGridIndexStart && xIndex <= xGridIndexStop &&
+                        yIndex >= yGridIndexStart && yIndex <= yGridIndexStop) {
+
+                    // Request the tile and draw it
+                    Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
+                    if (tile != null && !tile.isRecycled()) {
+                        reusableRect.set(left, top,
+                                left + TILE_SIZE * zoomDiff,
+                                top + TILE_SIZE * zoomDiff);
+                        canvas.drawBitmap(tile, null, reusableRect, backgroundPaint);
+                    }
+
+                    if (debug) {
+                        canvas.drawRect(left, top,
+                                left + TILE_SIZE * zoomDiff,
+                                top + TILE_SIZE * zoomDiff, debugPaint);
+                        canvas.drawText(xIndex + "," + yIndex,
+                                left + TILE_SIZE * zoomDiff / 2,
+                                top + TILE_SIZE * zoomDiff / 2 + debugPaint.getTextSize() / 4,
+                                debugPaint);
+                        canvas.drawText(zoomLevel + "",
+                                left + TILE_SIZE * zoomDiff - 30,
+                                top + debugPaint.getTextSize() + 5,
+                                debugPaint);
+                    }
+
                 } else {
-                    // Draw black rect as a placeholder
+
+                    // If the current tile is outside user content, draw placeholder
                     canvas.drawRect(left, top,
                             left + TILE_SIZE * zoomDiff,
-                            top + TILE_SIZE * zoomDiff, backgroundPaint);
+                            top + TILE_SIZE * zoomDiff,
+                            backgroundPaint);
+
                 }
 
-                if (SHOW_DEBUG) {
-                    canvas.drawRect(left, top,
-                            left + TILE_SIZE * zoomDiff,
-                            top + TILE_SIZE * zoomDiff, debugPaint);
-                    canvas.drawText(xIndex + "," + yIndex,
-                            left + TILE_SIZE * zoomDiff / 2,
-                            top + TILE_SIZE * zoomDiff / 2 + debugPaint.getTextSize() / 4,
-                            debugPaint);
-                    canvas.drawText(zoomLevel + "",
-                            left + TILE_SIZE * zoomDiff - 30,
-                            top + debugPaint.getTextSize() + 5,
-                            debugPaint);
-                }
             }
         }
 

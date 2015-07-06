@@ -13,8 +13,11 @@ public class TilePool {
 
     private SparseArray<Tile[][]> tilesByZoomLevel;
 
-    public TilePool() {
-        tilesByZoomLevel = new SparseArray<Tile[][]>();
+    private int tilesBackgroundColor;
+
+    public TilePool(int tilesBackgroundColor) {
+        this.tilesBackgroundColor = tilesBackgroundColor;
+        this.tilesByZoomLevel = new SparseArray<Tile[][]>();
     }
 
     public Bitmap getTile(int zoomLevel, int xIndex, int yIndex, float contentWidth, float contentHeight) {
@@ -44,6 +47,7 @@ public class TilePool {
             // Create its bitmap
             Bitmap bitmap = Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
             Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(tilesBackgroundColor);
             float zoom = zoomLevel / 10f;
             tileRenderer.renderTile(canvas,
                     xIndex * TILE_SIZE / zoom / contentWidth,

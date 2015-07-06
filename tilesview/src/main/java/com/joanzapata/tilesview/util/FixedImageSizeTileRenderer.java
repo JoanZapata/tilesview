@@ -8,12 +8,13 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
 
     private final float sourceWidth, sourceHeight;
 
-    private final RectF sourceRect;
+    private final RectF sourceRect, destRect;
 
     public FixedImageSizeTileRenderer(float sourceWidth, float sourceHeight) {
         this.sourceWidth = sourceWidth;
         this.sourceHeight = sourceHeight;
         this.sourceRect = new RectF();
+        this.destRect = new RectF();
     }
 
     @Override
@@ -24,6 +25,8 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
 
         float xDiff, yDiff;
         float xFactor, yFactor;
+        float initialScale = contentInitialWidth / sourceWidth;
+        float scale = canvas.getWidth() / (widthRatio * contentInitialWidth);
 
         // Try using source width as reference
         float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
@@ -55,12 +58,31 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
             return;
         }
 
+        destRect.set(0, 0, canvas.getWidth(), canvas.getHeight());
+
+        if (sourceRect.top < 0) {
+            destRect.top -= sourceRect.top * initialScale * scale;
+            sourceRect.top = 0;
+        }
+        if (sourceRect.left < 0) {
+            destRect.left -= sourceRect.left * initialScale * scale;
+            sourceRect.left = 0;
+        }
+        if (sourceRect.right > sourceWidth) {
+            destRect.right += (sourceWidth - sourceRect.right) * initialScale * scale;
+            sourceRect.right = sourceWidth;
+        }
+        if (sourceRect.bottom > sourceHeight) {
+            destRect.bottom += (sourceHeight - sourceRect.bottom) * initialScale * scale;
+            sourceRect.bottom = sourceHeight;
+        }
+
         // Call user code
-        renderTile(canvas, sourceRect);
+        renderTile(canvas, sourceRect, destRect);
 
     }
 
-    protected abstract void renderTile(Canvas canvas, RectF sourceRect);
+    protected abstract void renderTile(Canvas canvas, RectF sourceRect, RectF destRect);
 
 
 }

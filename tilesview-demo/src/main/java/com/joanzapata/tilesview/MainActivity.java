@@ -24,28 +24,20 @@ public class MainActivity extends Activity {
         try {
             inputStream = getResources().getAssets().open("world.jpg");
             final BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(inputStream, false);
-            final Rect destRect = new Rect();
-            final Rect sourceRect = new Rect();
-            final Paint paint = new Paint();
-            final Paint circlePaint = new Paint();
-            circlePaint.setStyle(Paint.Style.FILL);
-            circlePaint.setColor(Color.RED);
-            circlePaint.setAntiAlias(true);
 
+            final Paint paint = new Paint();
             final int sourceWidth = decoder.getWidth();
             final int sourceHeight = decoder.getHeight();
+            final Rect sourceRect = new Rect();
             tilesView.setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
                 @Override
-                public void renderTile(Canvas canvas, RectF sourceRectF) {
+                public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
                     sourceRect.set(
                             (int) sourceRectF.left, (int) sourceRectF.top,
                             (int) sourceRectF.right, (int) sourceRectF.bottom
                     );
-                    destRect.set(0, 0, canvas.getWidth(), canvas.getHeight());
 
                     BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.outWidth = canvas.getWidth();
-                    options.outHeight = canvas.getHeight();
                     options.inPreferredConfig = Bitmap.Config.RGB_565;
                     options.inPreferQualityOverSpeed = true;
                     Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
@@ -55,6 +47,10 @@ public class MainActivity extends Activity {
                 }
             });
 
+            final Paint circlePaint = new Paint();
+            circlePaint.setStyle(Paint.Style.FILL);
+            circlePaint.setColor(Color.RED);
+            circlePaint.setAntiAlias(true);
             tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
                 @Override
                 public void renderLayer(Canvas canvas) {
