@@ -1,5 +1,6 @@
 package com.joanzapata.tilesview;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.ColorDrawable;
@@ -40,6 +41,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private RectF reusableRect = new RectF();
     private List<Layer> layers = new ArrayList<Layer>();
     private boolean debug = false;
+    private int doubleTapZoomLevelDiff = 4;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -72,6 +74,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public void setDebug(boolean debug) {
         this.debug = debug;
         invalidate();
+    }
+
+    public void setDoubleTapZoomLevelDiff(int doubleTapZoomLevelDiff) {
+        this.doubleTapZoomLevelDiff = doubleTapZoomLevelDiff;
     }
 
     @Override
@@ -208,8 +214,34 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
-        zoomLevel = Math.round(this.scale * 10f);
+        zoomLevel = Math.round(scale * 10f);
         invalidate();
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(final float focusX, final float focusY) {
+        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(scale, (zoomLevel + doubleTapZoomLevelDiff) / 10f);
+        valueAnimator.setDuration(1000);
+        valueAnimator.start();
+
+        Runnable animation = new Runnable() {
+            @Override
+            public void run() {
+                Float animatedValue = (Float) valueAnimator.getAnimatedValue();
+                onScale(animatedValue / scale, focusX, focusY);
+                invalidate();
+
+                if (valueAnimator.isRunning()) {
+                    postOnAnimation(this);
+                } else {
+                    onScaleEnd();
+                }
+
+            }
+        };
+
+        postOnAnimation(animation);
         return true;
     }
 

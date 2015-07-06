@@ -7,7 +7,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.OverScroller;
 
-public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener {
+public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, GestureDetector.OnDoubleTapListener {
 
     private final ScrollAndZoomListener scrollAndZoomListener;
 
@@ -23,6 +23,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
         this.referenceView = referenceView;
         this.gestureDetector = new GestureDetector(context, this);
         this.gestureDetector.setIsLongpressEnabled(false);
+        gestureDetector.setOnDoubleTapListener(this);
         this.scaleGestureDetector = new ScaleGestureDetector(context, this);
         this.scrollAndZoomListener = scrollAndZoomListener;
         this.overScroller = new OverScroller(context);
@@ -103,10 +104,27 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
         scrollAndZoomListener.onScaleEnd();
     }
 
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
+        return scrollAndZoomListener.onDoubleTap(e.getX(), e.getY());
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+        return false;
+    }
+
     public interface ScrollAndZoomListener {
         boolean onScroll(float distanceX, float distanceY);
 
         boolean onScale(float scaleFactor, float focusX, float focusY);
+
+        boolean onDoubleTap(float focusX, float focusY);
 
         void onScaleEnd();
     }
