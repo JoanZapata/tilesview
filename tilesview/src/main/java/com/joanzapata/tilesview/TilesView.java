@@ -141,7 +141,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                         canvas.drawLine(left, top, left + lineSize, top, debugPaint);
                         canvas.drawLine(left, top, left, top + lineSize, debugPaint);
                         canvas.drawLine(left, bottom - lineSize, left, bottom, debugPaint);
-                        canvas.drawLine(left, bottom, left, bottom + lineSize, debugPaint);
+                        canvas.drawLine(left, bottom, left + lineSize, bottom, debugPaint);
                         canvas.drawLine(right - lineSize, top, right, top, debugPaint);
                         canvas.drawLine(right, top, right, top + lineSize, debugPaint);
                         canvas.drawLine(right - lineSize, bottom, right, bottom, debugPaint);
