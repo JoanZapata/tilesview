@@ -80,7 +80,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
 
         canvas.save();
-        canvas.translate(-offsetX, -offsetY);
+        canvas.translate((int) -offsetX, (int) -offsetY);
 
         // Find the top left index for the current scale and canvas size
         float zoomDiff = scale / (zoomLevel / 10f);
