@@ -25,10 +25,13 @@ public class TilePool {
 
     private int tilesBackgroundColor;
 
+    private Runnable placeholderRunnable;
+
+    private Bitmap placeholder;
+
     public TilePool(int tilesBackgroundColor, TilePoolListener tilePoolListener) {
         this.tilePoolListener = tilePoolListener;
         this.tilesBackgroundColor = tilesBackgroundColor;
-        this.tilesByZoomLevel = new SparseArray<Tile[][]>();
     }
 
     public Bitmap getTile(final int zoomLevel, final int xIndex, final int yIndex, final float contentWidth, final float contentHeight) {
@@ -94,9 +97,43 @@ public class TilePool {
         return tile.getBitmap();
     }
 
+    public Bitmap getPlaceholder(final float contentWidth, final float contentHeight) {
+        if (tileRenderer == null || placeholderRunnable != null || contentWidth == 0 || contentHeight == 0)
+            return null;
+
+        if (placeholder != null)
+            return placeholder;
+
+        placeholderRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bitmap = Bitmap.createBitmap(
+                        (int) (contentWidth / 2),
+                        (int) (contentHeight / 2),
+                        Bitmap.Config.RGB_565);
+                Canvas canvas = new Canvas(bitmap);
+                canvas.drawColor(tilesBackgroundColor);
+                tileRenderer.renderTile(canvas,
+                        0f, 0f, 1f, 1f,
+                        contentWidth, contentHeight);
+                placeholder = bitmap;
+                placeholderRunnable = null;
+            }
+        };
+
+        executorService.submit(placeholderRunnable);
+        return placeholder;
+    }
+
     public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+
+        // Stop existing executor service
         if (executorService != null)
             executorService.shutdownNow();
+
+        // Reset all tiles
+        this.tilesByZoomLevel = new SparseArray<Tile[][]>();
+
         int nbCores = Runtime.getRuntime().availableProcessors();
         executorService = Executors.newFixedThreadPool(threadSafe ? nbCores : 1);
         this.tileRenderer = tileRenderer;
