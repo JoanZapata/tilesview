@@ -94,11 +94,11 @@ public class TilePool {
         return tile.getBitmap();
     }
 
-    public void setTileRenderer(TileRenderer tileRenderer) {
+    public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
         if (executorService != null)
             executorService.shutdownNow();
         int nbCores = Runtime.getRuntime().availableProcessors();
-        executorService = Executors.newFixedThreadPool(nbCores);
+        executorService = Executors.newFixedThreadPool(threadSafe ? nbCores : 1);
         this.tileRenderer = tileRenderer;
     }
 
