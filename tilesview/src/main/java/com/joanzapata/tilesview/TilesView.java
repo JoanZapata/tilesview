@@ -94,6 +94,15 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         // Adjustments for edge cases
         if (xOffsetOnContent < 0) xIndexStart--;
         if (yOffsetOnContent < 0) yIndexStart--;
+
+        if (zoomDiff != 1) {
+            // FIXME could be more accurate, should only expand required values to fill the screen
+            xIndexStart--;
+            yIndexStart--;
+            xIndexStop++;
+            yIndexStop++;
+        }
+
         int xGridIndexStart = Math.max(0, xIndexStart);
         int yGridIndexStart = Math.max(0, yIndexStart);
         int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
