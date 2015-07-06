@@ -104,10 +104,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             for (int yIndex = yIndexStart; yIndex <= yIndexStop; yIndex++) {
 
                 // Compute the current tile position on canvas
+                float spread = zoomDiff != 1f ? +1f : 0f;
                 float left = xIndex * (float) TILE_SIZE * zoomDiff;
                 float top = yIndex * (float) TILE_SIZE * zoomDiff;
-                float right = left + TILE_SIZE * zoomDiff;
-                float bottom = top + TILE_SIZE * zoomDiff;
+                float right = left + TILE_SIZE * zoomDiff + spread;
+                float bottom = top + TILE_SIZE * zoomDiff + spread;
 
                 // If this tile is not outside the user content
                 if (xIndex >= xGridIndexStart && xIndex <= xGridIndexStop &&
