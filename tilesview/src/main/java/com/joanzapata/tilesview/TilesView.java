@@ -101,18 +101,21 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         if (xOffsetOnContent < 0) xIndexStart--;
         if (yOffsetOnContent < 0) yIndexStart--;
 
+
+        int xGridIndexStart = Math.max(0, xIndexStart);
+        int yGridIndexStart = Math.max(0, yIndexStart);
+        int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
+        int yGridIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
+
         if (zoomDiff != 1) {
             // FIXME could be more accurate, should only expand required values to fill the screen
             xIndexStart--;
             yIndexStart--;
             xIndexStop++;
             yIndexStop++;
+            xGridIndexStop++;
+            yGridIndexStop++;
         }
-
-        int xGridIndexStart = Math.max(0, xIndexStart);
-        int yGridIndexStart = Math.max(0, yIndexStart);
-        int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
-        int yGridIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
 
         // Loop through all tiles visible on the screen
         for (int xIndex = xIndexStart; xIndex <= xIndexStop; xIndex++) {
@@ -134,6 +137,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     if (tile != null && !tile.isRecycled()) {
                         reusableRect.set(left, top, right, bottom);
                         canvas.drawBitmap(tile, null, reusableRect, backgroundPaint);
+                    } else {
+                        canvas.drawRect(left, top, right, bottom, backgroundPaint);
                     }
 
                     if (debug) {
