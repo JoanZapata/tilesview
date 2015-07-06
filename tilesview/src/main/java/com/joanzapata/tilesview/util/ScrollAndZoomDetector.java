@@ -17,11 +17,9 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     private final OverScroller overScroller;
 
-    private final Context context;
     private final View referenceView;
 
     public ScrollAndZoomDetector(Context context, View referenceView, ScrollAndZoomListener scrollAndZoomListener) {
-        this.context = context;
         this.referenceView = referenceView;
         this.gestureDetector = new GestureDetector(context, this);
         this.gestureDetector.setIsLongpressEnabled(false);
