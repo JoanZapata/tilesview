@@ -90,7 +90,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
-        return scrollAndZoomListener.onScale(detector.getScaleFactor());
+        return scrollAndZoomListener.onScale(detector.getScaleFactor(), detector.getFocusX(), detector.getFocusY());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
     public interface ScrollAndZoomListener {
         boolean onScroll(float distanceX, float distanceY);
 
-        boolean onScale(float scaleFactor);
+        boolean onScale(float scaleFactor, float focusX, float focusY);
 
         void onScaleEnd();
     }

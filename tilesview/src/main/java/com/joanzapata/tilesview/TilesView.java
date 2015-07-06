@@ -189,9 +189,26 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     @Override
-    public boolean onScale(float scaleFactor) {
-        this.scale *= scaleFactor;
-        this.zoomLevel = Math.round(this.scale * 10f);
+    public boolean onScale(float scaleFactor, float focusX, float focusY) {
+
+        // Move offsets so that the focus point remains the same
+        float newScale = scale * scaleFactor;
+        float contentWidthBefore = getWidth() * scale;
+        float contentWidthAfter = getWidth() * newScale;
+        float contentFocusXBefore = offsetX + focusX;
+        float contentFocusXBeforeRatio = contentFocusXBefore / contentWidthBefore;
+        float contentFocusXAfter = contentFocusXBeforeRatio * contentWidthAfter;
+        offsetX += contentFocusXAfter - contentFocusXBefore;
+
+        float contentHeightBefore = getHeight() * scale;
+        float contentHeightAfter = getHeight() * newScale;
+        float contentFocusYBefore = offsetY + focusY;
+        float contentFocusYBeforeRatio = contentFocusYBefore / contentHeightBefore;
+        float contentFocusYAfter = contentFocusYBeforeRatio * contentHeightAfter;
+        offsetY += contentFocusYAfter - contentFocusYBefore;
+
+        scale = newScale;
+        zoomLevel = Math.round(this.scale * 10f);
         invalidate();
         return true;
     }
