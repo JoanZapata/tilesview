@@ -184,6 +184,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public void setTileRenderer(TileRenderer tileRenderer) {
         tilePool.setTileRenderer(tileRenderer);
+        postInvalidate();
     }
 
     @Override

@@ -22,6 +22,9 @@ public class TilePool {
 
     public Bitmap getTile(int zoomLevel, int xIndex, int yIndex, float contentWidth, float contentHeight) {
 
+        // Don't try to render anything if there's not tile renderer
+        if (tileRenderer == null) return null;
+
         // Get the tiles array for the given zoom (or create it)
         Tile[][] tiles = tilesByZoomLevel.get(zoomLevel);
         if (tiles == null) {
