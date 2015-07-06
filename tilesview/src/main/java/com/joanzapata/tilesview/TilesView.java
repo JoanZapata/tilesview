@@ -47,8 +47,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        this.backgroundColor = Color.BLACK;
         if (getBackground() instanceof ColorDrawable)
-            backgroundColor = ((ColorDrawable) getBackground()).getColor();
+            this.backgroundColor = ((ColorDrawable) getBackground()).getColor();
         this.tilePool = new TilePool(backgroundColor, this);
         this.scale = 1;
         this.zoomLevel = (int) (this.scale * 10);
