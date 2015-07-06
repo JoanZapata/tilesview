@@ -4,35 +4,27 @@ import android.graphics.Bitmap;
 
 public class Tile {
 
-    int zoomLevel;
-    int x;
-    int y;
-    Bitmap bitmap;
+    public static final int STATE_RENDERING = 0;
+    public static final int STATE_RENDERED = 1;
 
-    public Tile(int zoomLevel, int x, int y) {
-        this.zoomLevel = zoomLevel;
-        this.x = x;
-        this.y = y;
+    private Bitmap bitmap;
+
+    private int state;
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Tile tile = (Tile) o;
-
-        if (zoomLevel != tile.zoomLevel) return false;
-        if (x != tile.x) return false;
-        return y == tile.y;
-
+    public Bitmap getBitmap() {
+        return bitmap;
     }
 
-    @Override
-    public int hashCode() {
-        int result = zoomLevel;
-        result = 31 * result + x;
-        result = 31 * result + y;
-        return result;
+    public int getState() {
+        return state;
     }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
 }

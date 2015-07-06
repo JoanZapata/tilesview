@@ -8,13 +8,13 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
 
     private final float sourceWidth, sourceHeight;
 
-    private final RectF sourceRect, destRect;
+    private final ThreadLocal<RectF> sourceRectTL, destRectTL;
 
     public FixedImageSizeTileRenderer(float sourceWidth, float sourceHeight) {
         this.sourceWidth = sourceWidth;
         this.sourceHeight = sourceHeight;
-        this.sourceRect = new RectF();
-        this.destRect = new RectF();
+        this.sourceRectTL = new ThreadLocal<RectF>();
+        this.destRectTL = new ThreadLocal<RectF>();
     }
 
     @Override
@@ -27,6 +27,17 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
         float xFactor, yFactor;
         float initialScale = contentInitialWidth / sourceWidth;
         float scale = canvas.getWidth() / (widthRatio * contentInitialWidth);
+
+        RectF sourceRect = sourceRectTL.get();
+        if (sourceRect == null) {
+            sourceRect = new RectF();
+            sourceRectTL.set(sourceRect);
+        }
+        RectF destRect = destRectTL.get();
+        if (destRect == null) {
+            destRect = new RectF();
+            destRectTL.set(destRect);
+        }
 
         // Try using source width as reference
         float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;

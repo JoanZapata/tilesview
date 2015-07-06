@@ -7,13 +7,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import com.joanzapata.tilesview.internal.Tile;
 import com.joanzapata.tilesview.internal.TilePool;
 import com.joanzapata.tilesview.util.ScrollAndZoomDetector;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener {
+public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
 
@@ -48,7 +49,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         if (getBackground() instanceof ColorDrawable)
             backgroundColor = ((ColorDrawable) getBackground()).getColor();
-        this.tilePool = new TilePool(backgroundColor);
+        this.tilePool = new TilePool(backgroundColor, this);
         this.scale = 1;
         this.zoomLevel = (int) (this.scale * 10);
         this.offsetX = -getPaddingLeft();
@@ -257,4 +258,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         invalidate();
     }
 
+    @Override
+    public void onTileRendered(Tile tile) {
+        postInvalidate();
+    }
 }

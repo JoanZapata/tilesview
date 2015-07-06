@@ -28,11 +28,11 @@ public class MainActivity extends Activity {
             final Paint paint = new Paint();
             final int sourceWidth = decoder.getWidth();
             final int sourceHeight = decoder.getHeight();
-            final Rect sourceRect = new Rect();
+            tilesView.setDebug(false);
             tilesView.setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
                 @Override
                 public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
-                    sourceRect.set(
+                    Rect sourceRect = new Rect(
                             (int) sourceRectF.left, (int) sourceRectF.top,
                             (int) sourceRectF.right, (int) sourceRectF.bottom
                     );
