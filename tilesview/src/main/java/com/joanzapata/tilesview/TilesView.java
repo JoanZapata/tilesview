@@ -104,8 +104,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             for (int yIndex = yIndexStart; yIndex <= yIndexStop; yIndex++) {
 
                 // Compute the current tile position on canvas
-                float left = xIndex * TILE_SIZE * zoomDiff;
-                float top = yIndex * TILE_SIZE * zoomDiff;
+                float left = xIndex * (float) TILE_SIZE * zoomDiff;
+                float top = yIndex * (float) TILE_SIZE * zoomDiff;
+                float right = left + TILE_SIZE * zoomDiff;
+                float bottom = top + TILE_SIZE * zoomDiff;
 
                 // If this tile is not outside the user content
                 if (xIndex >= xGridIndexStart && xIndex <= xGridIndexStop &&
@@ -114,22 +116,26 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     // Request the tile and draw it
                     Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
                     if (tile != null && !tile.isRecycled()) {
-                        reusableRect.set(left, top,
-                                left + TILE_SIZE * zoomDiff,
-                                top + TILE_SIZE * zoomDiff);
+                        reusableRect.set(left, top, right, bottom);
                         canvas.drawBitmap(tile, null, reusableRect, backgroundPaint);
                     }
 
                     if (debug) {
-                        canvas.drawRect(left, top,
-                                left + TILE_SIZE * zoomDiff,
-                                top + TILE_SIZE * zoomDiff, debugPaint);
+                        int lineSize = 20;
+                        canvas.drawLine(left, top, left + lineSize, top, debugPaint);
+                        canvas.drawLine(left, top, left, top + lineSize, debugPaint);
+                        canvas.drawLine(left, bottom - lineSize, left, bottom, debugPaint);
+                        canvas.drawLine(left, bottom, left, bottom + lineSize, debugPaint);
+                        canvas.drawLine(right - lineSize, top, right, top, debugPaint);
+                        canvas.drawLine(right, top, right, top + lineSize, debugPaint);
+                        canvas.drawLine(right - lineSize, bottom, right, bottom, debugPaint);
+                        canvas.drawLine(right, bottom - lineSize, right, bottom, debugPaint);
                         canvas.drawText(xIndex + "," + yIndex,
-                                left + TILE_SIZE * zoomDiff / 2,
-                                top + TILE_SIZE * zoomDiff / 2 + debugPaint.getTextSize() / 4,
+                                (left + right) / 2f,
+                                (top + bottom) / 2f + debugPaint.getTextSize() / 4,
                                 debugPaint);
                         canvas.drawText(zoomLevel + "",
-                                left + TILE_SIZE * zoomDiff - 30,
+                                right - 30,
                                 top + debugPaint.getTextSize() + 5,
                                 debugPaint);
                     }
@@ -137,10 +143,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 } else {
 
                     // If the current tile is outside user content, draw placeholder
-                    canvas.drawRect(left, top,
-                            left + TILE_SIZE * zoomDiff,
-                            top + TILE_SIZE * zoomDiff,
-                            backgroundPaint);
+                    canvas.drawRect(left, top, right, bottom, backgroundPaint);
 
                 }
 
