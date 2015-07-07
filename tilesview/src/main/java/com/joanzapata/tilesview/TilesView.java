@@ -129,97 +129,75 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             yGridIndexStop += EXPAND_DURING_SCALE;
         }
 
-        // Loop through all tiles visible on the screen
-        for (int xIndex = xIndexStart; xIndex <= xIndexStop; xIndex++) {
-            for (int yIndex = yIndexStart; yIndex <= yIndexStop; yIndex++) {
+        /*
+         * Loop through the 2D grid. This loop is a little complex
+         * because it starts at the top left corner and reach the
+         * center in a spiral like movement. See https://goo.gl/r7As7V
+         */
+        int xIndex = xIndexStart;
+        int yIndex = yIndexStart;
+        while (xIndex < xIndexStop || yIndex < yIndexStop) {
 
-                // Compute the current tile position on canvas
-                float spread = zoomDiff != 1f ? +1f : 0f;
-                float left = xIndex * (float) TILE_SIZE * zoomDiff;
-                float top = yIndex * (float) TILE_SIZE * zoomDiff;
-                float right = left + TILE_SIZE * zoomDiff + spread;
-                float bottom = top + TILE_SIZE * zoomDiff + spread;
+            while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                // If this tile is not outside the user content
-                if (xIndex >= xGridIndexStart && xIndex <= xGridIndexStop &&
-                        yIndex >= yGridIndexStart && yIndex <= yGridIndexStop) {
+                drawTile(xIndex, yIndex, canvas,
+                        placeholder, zoomDiff, placeholderRatio,
+                        xGridIndexStart, xGridIndexStop,
+                        yGridIndexStart, yGridIndexStop,
+                        contentWidth, contentHeight);
 
-                    // Request the tile
-                    Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
-
-                    if (tile != null && !tile.isRecycled()) {
-                        // Draw the tile if any
-                        reusableRectF.set(left, top, right, bottom);
-                        canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
-
-                    } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
-                        // Draw the placeholder if any
-                        reusableRectF.set(left, top, right, bottom);
-                        float placeholderTileSize = TILE_SIZE / placeholderRatio / scale * zoomDiff;
-                        reusableRect.set(
-                                (int) (xIndex * placeholderTileSize),
-                                (int) (yIndex * placeholderTileSize),
-                                (int) ((xIndex + 1f) * placeholderTileSize),
-                                (int) ((yIndex + 1f) * placeholderTileSize));
-
-                        if (reusableRect.right > placeholder.getWidth()) {
-                            float rightOffsetOnPlaceholderTile = reusableRect.right - placeholder.getWidth();
-                            float rightOffset = rightOffsetOnPlaceholderTile * (TILE_SIZE * zoomDiff) / placeholderTileSize;
-                            canvas.drawRect(
-                                    reusableRectF.right - rightOffset - 1, reusableRectF.top,
-                                    reusableRectF.right, reusableRectF.bottom,
-                                    backgroundPaint);
-                            reusableRectF.right -= rightOffset;
-                            reusableRect.right = placeholder.getWidth();
-                        }
-
-                        if (reusableRect.bottom > placeholder.getHeight()) {
-                            float bottomOffsetOnPlaceholderTile = reusableRect.bottom - placeholder.getHeight();
-                            float bottomOffset = bottomOffsetOnPlaceholderTile * (TILE_SIZE * zoomDiff) / placeholderTileSize;
-                            canvas.drawRect(
-                                    reusableRectF.left, reusableRectF.bottom - bottomOffset - 1,
-                                    reusableRectF.right, reusableRectF.bottom,
-                                    backgroundPaint);
-                            reusableRectF.bottom -= bottomOffset;
-                            reusableRect.bottom = placeholder.getHeight();
-                        }
-
-                        canvas.drawBitmap(placeholder, reusableRect, reusableRectF, null);
-
-
-                    } else {
-                        // Draw the background otherwise
-                        canvas.drawRect(left, top, right, bottom, backgroundPaint);
-                    }
-
-                    if (debug) {
-                        int lineSize = 20;
-                        canvas.drawLine(left, top, left + lineSize, top, debugPaint);
-                        canvas.drawLine(left, top, left, top + lineSize, debugPaint);
-                        canvas.drawLine(left, bottom - lineSize, left, bottom, debugPaint);
-                        canvas.drawLine(left, bottom, left + lineSize, bottom, debugPaint);
-                        canvas.drawLine(right - lineSize, top, right, top, debugPaint);
-                        canvas.drawLine(right, top, right, top + lineSize, debugPaint);
-                        canvas.drawLine(right - lineSize, bottom, right, bottom, debugPaint);
-                        canvas.drawLine(right, bottom - lineSize, right, bottom, debugPaint);
-                        canvas.drawText(xIndex + "," + yIndex,
-                                (left + right) / 2f,
-                                (top + bottom) / 2f + debugPaint.getTextSize() / 4,
-                                debugPaint);
-                        canvas.drawText(zoomLevel + "",
-                                right - 30,
-                                top + debugPaint.getTextSize() + 5,
-                                debugPaint);
-                    }
-
-                } else {
-
-                    // If the current tile is outside user content, draw placeholder
-                    canvas.drawRect(left, top, right, bottom, backgroundPaint);
-
-                }
-
+                xIndex++;
             }
+            xIndex = xIndexStop;
+            yIndex++;
+            yIndexStart++;
+            if (xIndexStart > xIndexStop || yIndexStart > yIndexStop) break;
+
+            while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
+
+                drawTile(xIndex, yIndex, canvas,
+                        placeholder, zoomDiff, placeholderRatio,
+                        xGridIndexStart, xGridIndexStop,
+                        yGridIndexStart, yGridIndexStop,
+                        contentWidth, contentHeight);
+
+                yIndex++;
+            }
+            yIndex = yIndexStop;
+            xIndexStop--;
+            xIndex--;
+            if (xIndexStart > xIndexStop || yIndexStart > yIndexStop) break;
+
+            while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
+
+                drawTile(xIndex, yIndex, canvas,
+                        placeholder, zoomDiff, placeholderRatio,
+                        xGridIndexStart, xGridIndexStop,
+                        yGridIndexStart, yGridIndexStop,
+                        contentWidth, contentHeight);
+
+                xIndex--;
+            }
+            xIndex = xIndexStart;
+            yIndex--;
+            yIndexStop--;
+            if (xIndexStart > xIndexStop || yIndexStart > yIndexStop) break;
+
+            while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
+
+                drawTile(xIndex, yIndex, canvas,
+                        placeholder, zoomDiff, placeholderRatio,
+                        xGridIndexStart, xGridIndexStop,
+                        yGridIndexStart, yGridIndexStop,
+                        contentWidth, contentHeight);
+
+                yIndex--;
+            }
+            yIndex = yIndexStart;
+            xIndexStart++;
+            xIndex++;
+            if (xIndexStart > xIndexStop || yIndexStart > yIndexStop) break;
+
         }
 
         // Render user layers
@@ -232,6 +210,101 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         canvas.restore();
 
+    }
+
+    private void drawTile(
+            int xIndex, int yIndex,
+            Canvas canvas, Bitmap placeholder,
+            float zoomDiff, float placeholderRatio,
+            int xGridIndexStart, int xGridIndexStop,
+            int yGridIndexStart, int yGridIndexStop,
+            float contentWidth, float contentHeight) {
+
+        // Compute the current tile position on canvas
+        float spread = zoomDiff != 1f ? +1f : 0f;
+        float left = xIndex * (float) TILE_SIZE * zoomDiff;
+        float top = yIndex * (float) TILE_SIZE * zoomDiff;
+        float right = left + TILE_SIZE * zoomDiff + spread;
+        float bottom = top + TILE_SIZE * zoomDiff + spread;
+
+        // If this tile is not outside the user content
+        if (xIndex >= xGridIndexStart && xIndex <= xGridIndexStop &&
+                yIndex >= yGridIndexStart && yIndex <= yGridIndexStop) {
+
+            // Request the tile
+            Bitmap tile = tilePool.getTile(zoomLevel, xIndex, yIndex, contentWidth, contentHeight);
+
+            if (tile != null && !tile.isRecycled()) {
+                // Draw the tile if any
+                reusableRectF.set(left, top, right, bottom);
+                canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
+
+            } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
+                // Draw the placeholder if any
+                reusableRectF.set(left, top, right, bottom);
+                float placeholderTileSize = TILE_SIZE / placeholderRatio / scale * zoomDiff;
+                reusableRect.set(
+                        (int) (xIndex * placeholderTileSize),
+                        (int) (yIndex * placeholderTileSize),
+                        (int) ((xIndex + 1f) * placeholderTileSize),
+                        (int) ((yIndex + 1f) * placeholderTileSize));
+
+                if (reusableRect.right > placeholder.getWidth()) {
+                    float rightOffsetOnPlaceholderTile = reusableRect.right - placeholder.getWidth();
+                    float rightOffset = rightOffsetOnPlaceholderTile * (TILE_SIZE * zoomDiff) / placeholderTileSize;
+                    canvas.drawRect(
+                            reusableRectF.right - rightOffset - 1, reusableRectF.top,
+                            reusableRectF.right, reusableRectF.bottom,
+                            backgroundPaint);
+                    reusableRectF.right -= rightOffset;
+                    reusableRect.right = placeholder.getWidth();
+                }
+
+                if (reusableRect.bottom > placeholder.getHeight()) {
+                    float bottomOffsetOnPlaceholderTile = reusableRect.bottom - placeholder.getHeight();
+                    float bottomOffset = bottomOffsetOnPlaceholderTile * (TILE_SIZE * zoomDiff) / placeholderTileSize;
+                    canvas.drawRect(
+                            reusableRectF.left, reusableRectF.bottom - bottomOffset - 1,
+                            reusableRectF.right, reusableRectF.bottom,
+                            backgroundPaint);
+                    reusableRectF.bottom -= bottomOffset;
+                    reusableRect.bottom = placeholder.getHeight();
+                }
+
+                canvas.drawBitmap(placeholder, reusableRect, reusableRectF, null);
+
+
+            } else {
+                // Draw the background otherwise
+                canvas.drawRect(left, top, right, bottom, backgroundPaint);
+            }
+
+            if (debug) {
+                int lineSize = 20;
+                canvas.drawLine(left, top, left + lineSize, top, debugPaint);
+                canvas.drawLine(left, top, left, top + lineSize, debugPaint);
+                canvas.drawLine(left, bottom - lineSize, left, bottom, debugPaint);
+                canvas.drawLine(left, bottom, left + lineSize, bottom, debugPaint);
+                canvas.drawLine(right - lineSize, top, right, top, debugPaint);
+                canvas.drawLine(right, top, right, top + lineSize, debugPaint);
+                canvas.drawLine(right - lineSize, bottom, right, bottom, debugPaint);
+                canvas.drawLine(right, bottom - lineSize, right, bottom, debugPaint);
+                canvas.drawText(xIndex + "," + yIndex,
+                        (left + right) / 2f,
+                        (top + bottom) / 2f + debugPaint.getTextSize() / 4,
+                        debugPaint);
+                canvas.drawText(zoomLevel + "",
+                        right - 30,
+                        top + debugPaint.getTextSize() + 5,
+                        debugPaint);
+            }
+
+        } else {
+
+            // If the current tile is outside user content, draw placeholder
+            canvas.drawRect(left, top, right, bottom, backgroundPaint);
+
+        }
     }
 
     public void setTileRenderer(TileRenderer tileRenderer) {
