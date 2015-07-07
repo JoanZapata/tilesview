@@ -5,15 +5,12 @@ import android.graphics.Canvas;
 import android.util.SparseArray;
 import com.joanzapata.tilesview.TileRenderer;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import static com.joanzapata.tilesview.TilesView.TILE_SIZE;
 
 public class TilePool {
 
     /** Thread pool executor which will render everything */
-    private ExecutorService executorService;
+    private ReverseExecutor executor;
 
     /** Callback for rendered tiles */
     private TilePoolListener tilePoolListener;
@@ -68,7 +65,7 @@ public class TilePool {
             tiles[xIndex][yIndex] = tile;
 
             final Tile finalTile = tile;
-            executorService.submit(new Runnable() {
+            executor.submit(new Runnable() {
                 @Override
                 public void run() {
 
@@ -121,21 +118,21 @@ public class TilePool {
             }
         };
 
-        executorService.submit(placeholderRunnable);
+        executor.submit(placeholderRunnable);
         return placeholder;
     }
 
     public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
 
         // Stop existing executor service
-        if (executorService != null)
-            executorService.shutdownNow();
+        if (executor != null)
+            executor.shutdownNow();
 
         // Reset all tiles
         this.tilesByZoomLevel = new SparseArray<Tile[][]>();
 
         int nbCores = Runtime.getRuntime().availableProcessors();
-        executorService = Executors.newFixedThreadPool(threadSafe ? nbCores : 1);
+        executor = new ReverseExecutor(threadSafe ? nbCores : 1);
         this.tileRenderer = tileRenderer;
     }
 
