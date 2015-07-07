@@ -152,7 +152,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                         reusableRectF.set(left, top, right, bottom);
                         canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
 
-                    } else if (placeholder != null) {
+                    } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
                         // Draw the placeholder if any
                         reusableRectF.set(left, top, right, bottom);
                         float placeholderTileSize = TILE_SIZE / placeholderRatio / scale * zoomDiff;
