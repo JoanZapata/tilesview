@@ -241,6 +241,15 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        double tilesOnWidth = Math.ceil(w / (TILE_SIZE * 0.9f)) + 1;
+        double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1;
+        int maxTilesOnScreen = (int) (tilesOnWidth * tilesOnHeight);
+        tilePool.setMaxTasks(maxTilesOnScreen);
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent event) {
         return scrollAndZoomDetector.onTouchEvent(event);
     }

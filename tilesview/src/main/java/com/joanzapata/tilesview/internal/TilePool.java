@@ -9,8 +9,10 @@ import static com.joanzapata.tilesview.TilesView.TILE_SIZE;
 
 public class TilePool {
 
+    private static final float PLACEHOLDER_RATIO = 1f;
+
     /** Thread pool executor which will render everything */
-    private ReverseExecutor executor;
+    private LIFOExecutor executor;
 
     /** Callback for rendered tiles */
     private TilePoolListener tilePoolListener;
@@ -26,9 +28,12 @@ public class TilePool {
 
     private Bitmap placeholder;
 
+    private int maxTasks;
+
     public TilePool(int tilesBackgroundColor, TilePoolListener tilePoolListener) {
         this.tilePoolListener = tilePoolListener;
         this.tilesBackgroundColor = tilesBackgroundColor;
+        this.maxTasks = 1;
     }
 
     public Bitmap getTile(final int zoomLevel, final int xIndex, final int yIndex, final float contentWidth, final float contentHeight) {
@@ -63,30 +68,9 @@ public class TilePool {
             tile = new Tile();
             tile.setState(Tile.STATE_RENDERING);
             tiles[xIndex][yIndex] = tile;
-
-            final Tile finalTile = tile;
-            executor.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                    // Create its bitmap
-                    Bitmap bitmap = Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
-                    Canvas canvas = new Canvas(bitmap);
-                    canvas.drawColor(tilesBackgroundColor);
-                    float zoom = zoomLevel / 10f;
-                    tileRenderer.renderTile(canvas,
-                            xIndex * TILE_SIZE / zoom / contentWidth,
-                            yIndex * TILE_SIZE / zoom / contentHeight,
-                            TILE_SIZE / zoom / contentWidth,
-                            TILE_SIZE / zoom / contentHeight,
-                            contentWidth, contentHeight);
-
-                    finalTile.setBitmap(bitmap);
-                    finalTile.setState(Tile.STATE_RENDERED);
-                    tilePoolListener.onTileRendered(finalTile);
-
-                }
-            });
+            executor.submit(new TileRenderingTask(tile,
+                    xIndex, yIndex, zoomLevel,
+                    contentWidth, contentHeight));
 
         }
 
@@ -105,8 +89,8 @@ public class TilePool {
             @Override
             public void run() {
                 Bitmap bitmap = Bitmap.createBitmap(
-                        (int) (contentWidth / 2),
-                        (int) (contentHeight / 2),
+                        (int) (contentWidth * PLACEHOLDER_RATIO),
+                        (int) (contentHeight * PLACEHOLDER_RATIO),
                         Bitmap.Config.RGB_565);
                 Canvas canvas = new Canvas(bitmap);
                 canvas.drawColor(tilesBackgroundColor);
@@ -132,11 +116,62 @@ public class TilePool {
         this.tilesByZoomLevel = new SparseArray<Tile[][]>();
 
         int nbCores = Runtime.getRuntime().availableProcessors();
-        executor = new ReverseExecutor(threadSafe ? nbCores : 1);
+        executor = new LIFOExecutor(threadSafe ? nbCores : 1);
+        executor.setCapacity(maxTasks);
         this.tileRenderer = tileRenderer;
+    }
+
+    public void setMaxTasks(int maxTasks) {
+        this.maxTasks = maxTasks;
+        if (executor != null) executor.setCapacity(maxTasks);
     }
 
     public interface TilePoolListener {
         void onTileRendered(Tile tile);
+    }
+
+    private class TileRenderingTask implements Runnable, LIFOExecutor.Cancellable {
+
+        final Tile tile;
+        final int xIndex, yIndex, zoomLevel;
+        final float contentWidth, contentHeight;
+
+        public TileRenderingTask(Tile tile, int xIndex, int yIndex, int zoomLevel, float contentWidth, float contentHeight) {
+            this.tile = tile;
+            this.xIndex = xIndex;
+            this.yIndex = yIndex;
+            this.zoomLevel = zoomLevel;
+            this.contentWidth = contentWidth;
+            this.contentHeight = contentHeight;
+        }
+
+        @Override
+        public void run() {
+
+            // Create its bitmap
+            Bitmap bitmap = Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
+            Canvas canvas = new Canvas(bitmap);
+            canvas.drawColor(tilesBackgroundColor);
+            float zoom = zoomLevel / 10f;
+            tileRenderer.renderTile(canvas,
+                    xIndex * TILE_SIZE / zoom / contentWidth,
+                    yIndex * TILE_SIZE / zoom / contentHeight,
+                    TILE_SIZE / zoom / contentWidth,
+                    TILE_SIZE / zoom / contentHeight,
+                    contentWidth, contentHeight);
+
+            tile.setBitmap(bitmap);
+            tile.setState(Tile.STATE_RENDERED);
+            tilePoolListener.onTileRendered(tile);
+
+        }
+
+        @Override
+        public void cancel() {
+
+            // Remove the tile
+            tilesByZoomLevel.get(zoomLevel)[xIndex][yIndex] = null;
+
+        }
     }
 }
