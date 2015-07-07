@@ -24,6 +24,10 @@ public class TilePool {
 
     private int tilesBackgroundColor;
 
+    private Tile tileMRU, tileLRU;
+
+    private int nbTiles, nbMaxTiles;
+
     private Runnable placeholderRunnable;
 
     private Bitmap placeholder;
@@ -34,6 +38,8 @@ public class TilePool {
         this.tilePoolListener = tilePoolListener;
         this.tilesBackgroundColor = tilesBackgroundColor;
         this.maxTasks = 1;
+        this.nbMaxTiles = 100;
+        this.nbTiles = 0;
     }
 
     public Bitmap getTile(final int zoomLevel, final int xIndex, final int yIndex, final float contentWidth, final float contentHeight) {
@@ -57,20 +63,37 @@ public class TilePool {
         // Get it
         Tile tile = tiles[xIndex][yIndex];
 
+        if (tile != null)
+            tileMRU = tile.becomeMRU(tileMRU);
+
         // If currently rendering, ignore
-        if (tile != null && tile.getState() == Tile.STATE_RENDERING) {
+        if (tile != null && tile.getState() == Tile.STATE_RENDERING)
             return null;
-        }
 
         // If null request a rendering
         if (tile == null) {
 
-            tile = new Tile();
+            tile = new Tile(xIndex, yIndex, zoomLevel);
+            Bitmap existingBitmap = null;
+            if (tileLRU == null) {
+                tileLRU = tile;
+                tileMRU = tile;
+            } else if (nbTiles >= nbMaxTiles) {
+                tileLRU.setDeleted(true);
+                existingBitmap = tileLRU.getBitmap();
+                tileLRU = tileLRU.removeAndGetNewLRU();
+                tilesByZoomLevel.get(tileLRU.getZoomLevel())[tileLRU.getxIndex()][tileLRU.getyIndex()] = null;
+                nbTiles--;
+            }
+            tileMRU = tile.becomeMRU(tileMRU);
+            nbTiles++;
+
             tile.setState(Tile.STATE_RENDERING);
             tiles[xIndex][yIndex] = tile;
             executor.submit(new TileRenderingTask(tile,
                     xIndex, yIndex, zoomLevel,
-                    contentWidth, contentHeight));
+                    contentWidth, contentHeight,
+                    existingBitmap));
 
         }
 
@@ -123,6 +146,7 @@ public class TilePool {
 
     public void setMaxTasks(int maxTasks) {
         this.maxTasks = maxTasks;
+        this.nbMaxTiles = maxTasks * 2;
         if (executor != null) executor.setCapacity(maxTasks);
     }
 
@@ -134,22 +158,26 @@ public class TilePool {
 
         final Tile tile;
         final int xIndex, yIndex, zoomLevel;
-        final float contentWidth, contentHeight;
+        final float contentWidth;
+        final float contentHeight;
+        private final Bitmap existingBitmap;
 
-        public TileRenderingTask(Tile tile, int xIndex, int yIndex, int zoomLevel, float contentWidth, float contentHeight) {
+        public TileRenderingTask(Tile tile, int xIndex, int yIndex, int zoomLevel, float contentWidth, float contentHeight, Bitmap existingBitmap) {
             this.tile = tile;
             this.xIndex = xIndex;
             this.yIndex = yIndex;
             this.zoomLevel = zoomLevel;
             this.contentWidth = contentWidth;
             this.contentHeight = contentHeight;
+            this.existingBitmap = existingBitmap;
         }
 
         @Override
         public void run() {
+            if (tile.isDeleted()) return;
 
-            // Create its bitmap
-            Bitmap bitmap = Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
+            Bitmap bitmap = existingBitmap != null ? existingBitmap :
+                    Bitmap.createBitmap(TILE_SIZE, TILE_SIZE, Bitmap.Config.RGB_565);
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(tilesBackgroundColor);
             float zoom = zoomLevel / 10f;
@@ -164,6 +192,9 @@ public class TilePool {
             tile.setState(Tile.STATE_RENDERED);
             tilePoolListener.onTileRendered(tile);
 
+            if (tile.isDeleted()) {
+                bitmap.recycle();
+            }
         }
 
         @Override

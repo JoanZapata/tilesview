@@ -24,7 +24,7 @@ public class LIFOExecutor {
             public boolean offer(Runnable runnable) {
                 while (size() >= capacity) {
                     Runnable futureTask = pollLast();
-                    Cancellable cancellable = cancellables.get(futureTask);
+                    Cancellable cancellable = cancellables.remove(futureTask);
                     if (cancellable != null) {
                         cancellable.cancel();
                     } else {
@@ -34,7 +34,13 @@ public class LIFOExecutor {
                 return offerFirst(runnable);
             }
         };
-        threadPoolExecutor = new ThreadPoolExecutor(nbThreads, nbThreads, 0, TimeUnit.SECONDS, workQueue);
+
+        threadPoolExecutor = new ThreadPoolExecutor(nbThreads, nbThreads, 0, TimeUnit.SECONDS, workQueue) {
+            @Override
+            protected void afterExecute(Runnable r, Throwable t) {
+                cancellables.remove(r);
+            }
+        };
     }
 
     public void setCapacity(int capacity) {
