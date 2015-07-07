@@ -1,6 +1,7 @@
 package com.joanzapata.tilesview;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
@@ -9,8 +10,11 @@ import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends Activity {
+
 
     TilesView tilesView;
 
@@ -34,9 +38,7 @@ public class MainActivity extends Activity {
                 public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
                     Rect sourceRect = new Rect(
                             (int) sourceRectF.left, (int) sourceRectF.top,
-                            (int) sourceRectF.right, (int) sourceRectF.bottom
-                    );
-
+                            (int) sourceRectF.right, (int) sourceRectF.bottom);
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inPreferredConfig = Bitmap.Config.RGB_565;
                     options.inPreferQualityOverSpeed = true;
@@ -47,17 +49,23 @@ public class MainActivity extends Activity {
                 }
             });
 
-            final Paint circlePaint = new Paint();
-            circlePaint.setStyle(Paint.Style.FILL);
-            circlePaint.setColor(Color.RED);
-            circlePaint.setAntiAlias(true);
+            final List<POI> pois = Arrays.asList(
+                    new POI(this, R.drawable.tajmahal, 3918, 990, 5 / 7f),
+                    new POI(this, R.drawable.bigben, 2724.5f, 552f, 4 / 5f),
+                    new POI(this, R.drawable.eiffel, 2756.5f, 598, 4 / 5f),
+                    new POI(this, R.drawable.colosseum, 2898.5f, 721.5f, 2 / 3f),
+                    new POI(this, R.drawable.egypt, 3188, 935, 2 / 3f),
+                    new POI(this, R.drawable.liberty, 1636, 742, 4 / 5f));
             tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
                 @Override
                 public void renderLayer(Canvas canvas) {
-                    canvas.drawCircle(
-                            scaled(2750),
-                            scaled(600),
-                            30, circlePaint);
+                    for (int i = 0; i < pois.size(); i++) {
+                        POI poi = pois.get(i);
+                        canvas.drawBitmap(poi.bitmap,
+                                scaled(poi.offsetX) + poi.deltaX,
+                                scaled(poi.offsetY) + poi.deltaY,
+                                null);
+                    }
                 }
             });
 
@@ -76,5 +84,23 @@ public class MainActivity extends Activity {
                 // Quiet
             }
         }
+    }
+
+    private class POI {
+
+        final Bitmap bitmap;
+
+        final float offsetX, offsetY;
+
+        final float deltaX, deltaY;
+
+        public POI(Context context, int bitmapRes, float offsetX, float offsetY, float yAnchorRatio) {
+            bitmap = BitmapFactory.decodeResource(context.getResources(), bitmapRes);
+            this.offsetX = offsetX;
+            this.offsetY = offsetY;
+            this.deltaX = -bitmap.getWidth() * 0.5f;
+            this.deltaY = -bitmap.getHeight() * yAnchorRatio;
+        }
+
     }
 }
