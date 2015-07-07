@@ -17,6 +17,7 @@ import java.util.List;
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
+    private static final int EXPAND_DURING_SCALE = 1;
 
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
@@ -118,12 +119,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         if (zoomDiff != 1) {
             // FIXME could be more accurate, should only expand required values to fill the screen
-            xIndexStart--;
-            yIndexStart--;
-            xIndexStop++;
-            yIndexStop++;
-            xGridIndexStop++;
-            yGridIndexStop++;
+            xIndexStart -= EXPAND_DURING_SCALE;
+            yIndexStart -= EXPAND_DURING_SCALE;
+            xIndexStop += EXPAND_DURING_SCALE;
+            yIndexStop += EXPAND_DURING_SCALE;
+            xGridIndexStart -= EXPAND_DURING_SCALE;
+            yGridIndexStart -= EXPAND_DURING_SCALE;
+            xGridIndexStop += EXPAND_DURING_SCALE;
+            yGridIndexStop += EXPAND_DURING_SCALE;
         }
 
         // Loop through all tiles visible on the screen
@@ -243,8 +246,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        double tilesOnWidth = Math.ceil(w / (TILE_SIZE * 0.9f)) + 1;
-        double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1;
+        double tilesOnWidth = Math.ceil(w / (TILE_SIZE * 0.9f)) + 1 + EXPAND_DURING_SCALE * 2;
+        double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1 + EXPAND_DURING_SCALE * 2;
         int maxTilesOnScreen = (int) (tilesOnWidth * tilesOnHeight);
         tilePool.setMaxTasks(maxTilesOnScreen);
     }
