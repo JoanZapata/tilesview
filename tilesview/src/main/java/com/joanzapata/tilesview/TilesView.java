@@ -7,6 +7,8 @@ import android.graphics.drawable.ColorDrawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.Interpolator;
 import com.joanzapata.tilesview.internal.Tile;
 import com.joanzapata.tilesview.internal.TilePool;
 import com.joanzapata.tilesview.util.ScrollAndZoomDetector;
@@ -17,8 +19,10 @@ import java.util.List;
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
-
     private static final int MAX_ZOOM_LEVEL = 300;
+    private static final int DOUBLE_TAP_DURATION = 400;
+    private static final Interpolator DOUBLE_TAP_INTERPOLATOR = new DecelerateInterpolator();
+    private static final float DOUBLE_TAP_SCALE = 2f;
 
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
@@ -46,6 +50,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private List<Layer> layers = new ArrayList<Layer>();
     private boolean debug = false;
     private int doubleTapZoomLevelDiff = 4;
+
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -357,8 +362,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public boolean onDoubleTap(final float focusX, final float focusY) {
-        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(scale, (zoomLevel + doubleTapZoomLevelDiff) / 10f);
-        valueAnimator.setDuration(1000);
+        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(scale, Math.round(scale * DOUBLE_TAP_SCALE * 10f) / 10f);
+        valueAnimator.setDuration(DOUBLE_TAP_DURATION);
+        valueAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
         valueAnimator.start();
 
         Runnable animation = new Runnable() {
