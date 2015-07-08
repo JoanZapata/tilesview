@@ -19,6 +19,8 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     private final View referenceView;
 
+    private float lastScaleFocusX, lastScaleFocusY, lastScaleFactor;
+
     public ScrollAndZoomDetector(Context context, View referenceView, ScrollAndZoomListener scrollAndZoomListener) {
         this.referenceView = referenceView;
         this.gestureDetector = new GestureDetector(context, this);
@@ -94,6 +96,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
     public boolean onScale(ScaleGestureDetector detector) {
         lastScaleFocusX = detector.getFocusX();
         lastScaleFocusY = detector.getFocusY();
+        lastScaleFactor = detector.getScaleFactor();
         return scrollAndZoomListener.onScale(detector.getScaleFactor(),
                 detector.getFocusX(), detector.getFocusY());
     }
@@ -103,11 +106,9 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
         return true;
     }
 
-    float lastScaleFocusX, lastScaleFocusY;
-
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
-        scrollAndZoomListener.onScaleEnd(lastScaleFocusX, lastScaleFocusY);
+        scrollAndZoomListener.onScaleEnd(lastScaleFocusX, lastScaleFocusY, lastScaleFactor);
     }
 
     @Override
@@ -117,12 +118,15 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        return scrollAndZoomListener.onDoubleTap(e.getX(), e.getY());
+        return true;
     }
 
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
-        return false;
+        if (e.getActionMasked() == MotionEvent.ACTION_UP) {
+            scrollAndZoomListener.onDoubleTap(e.getX(), e.getY());
+        }
+        return true;
     }
 
     public interface ScrollAndZoomListener {
@@ -135,7 +139,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
         boolean onDoubleTap(float focusX, float focusY);
 
-        void onScaleEnd(float focusX, float focusY);
+        void onScaleEnd(float focusX, float focusY, float lastScaleFactor);
     }
 
 }

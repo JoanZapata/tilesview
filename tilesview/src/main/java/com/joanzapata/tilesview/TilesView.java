@@ -27,6 +27,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private static final float DOUBLE_TAP_SCALE = 2f;
     private static final long SCALE_ADJUSTMENT_DURATION = 200;
 
+    public static final int SCALE_TYPE_FLOOR = 1;
+    public static final int SCALE_TYPE_CEIL = 2;
+    public static final int SCALE_TYPE_ROUND = 3;
+
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
 
@@ -60,7 +64,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             backgroundColor = ((ColorDrawable) getBackground()).getColor();
         this.tilePool = new TilePool(backgroundColor, this);
         this.scale = 1f;
-        this.zoomLevel = zoomLevelForScale(scale);
+        this.zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
         this.offsetX = -getPaddingLeft();
         this.offsetY = -getPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
@@ -357,25 +361,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
-        zoomLevel = zoomLevelForScale(scale);
+        zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
         invalidate();
         return true;
     }
 
-    /** Return an appropriate zoom level for the given scale */
-    private int zoomLevelForScale(float scale) {
-        double scaleFrom0x10 = Math.round(scale * 10) - 10d;
-        int test = (int) Math.round(Math.log(scaleFrom0x10) / Math.log(2));
-        int result = (int) (10 + Math.pow(2, test));
-        if (scale < 1f) {
-            result = Math.max(MIN_ZOOM_LEVEL, Math.round(scale * 10f));
-        }
-        return Math.min(MAX_ZOOM_LEVEL, result);
-    }
-
     @Override
     public boolean onDoubleTap(final float focusX, final float focusY) {
-        animateScaleTo(Math.round(scale * DOUBLE_TAP_SCALE * 10f) / 10f, focusX, focusY, DOUBLE_TAP_DURATION);
+        animateScaleTo(zoomLevelForScale(scale * 2f, SCALE_TYPE_ROUND) / 10f, focusX, focusY, DOUBLE_TAP_DURATION);
         return true;
     }
 
@@ -394,7 +387,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     postOnAnimation(this);
                 } else if (animatedValue == newScale) {
                     onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
-                    onScaleEnd(focusXOnScreen, focusYOnScreen);
+                    onScaleEnd(focusXOnScreen, focusYOnScreen, 0f);
                 }
             }
         };
@@ -403,12 +396,27 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     @Override
-    public void onScaleEnd(float focusX, float focusY) {
-        this.zoomLevel = zoomLevelForScale(scale);
+    public void onScaleEnd(float focusX, float focusY, float lastScaleFactor) {
+        this.zoomLevel = zoomLevelForScale(scale, lastScaleFactor >= 1 ? SCALE_TYPE_CEIL : SCALE_TYPE_FLOOR);
         if (scale != zoomLevel / 10f && scale < MAX_ZOOM_LEVEL / 10f) {
             animateScaleTo(zoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
         }
     }
+
+    /** Return an appropriate zoom level for the given scale */
+    private int zoomLevelForScale(float scale, int scaleType) {
+        double scaleFrom0x10 = Math.round(scale * 10) - 10d;
+        double exactValue = Math.log(scaleFrom0x10) / Math.log(2);
+        int roundedValue = (int) (scaleType == SCALE_TYPE_FLOOR ? Math.floor(exactValue) :
+                scaleType == SCALE_TYPE_CEIL ? Math.ceil(exactValue) :
+                        Math.round(exactValue));
+        int result = (int) (10 + Math.pow(2, roundedValue));
+        if (scale < 1f) {
+            result = Math.max(MIN_ZOOM_LEVEL, Math.round(scale * 10f));
+        }
+        return Math.min(MAX_ZOOM_LEVEL, result);
+    }
+
 
     @Override
     public void onTileRendered(Tile tile) {
