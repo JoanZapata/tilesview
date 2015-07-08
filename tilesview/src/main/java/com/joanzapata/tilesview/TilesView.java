@@ -405,7 +405,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     public void onScaleEnd(float focusX, float focusY) {
         this.zoomLevel = zoomLevelForScale(scale);
-        if (scale != zoomLevel / 10f) {
+        if (scale != zoomLevel / 10f && scale < MAX_ZOOM_LEVEL / 10f) {
             animateScaleTo(zoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
         }
     }
