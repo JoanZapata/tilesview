@@ -6,6 +6,12 @@ import android.graphics.*;
 import android.os.Bundle;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
 import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
+import com.jug6ernaut.debugdrawer.DebugDrawer;
+import com.jug6ernaut.debugdrawer.views.ToggleElement;
+import com.jug6ernaut.debugdrawer.views.elements.AnimationSpeedElement;
+import com.jug6ernaut.debugdrawer.views.elements.LeakCanaryElement;
+import com.jug6ernaut.debugdrawer.views.elements.RiseAndShineElement;
+import com.jug6ernaut.debugdrawer.views.modules.*;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -15,13 +21,31 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
-
     TilesView tilesView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        new DebugDrawer()
+                .elements("UI",
+                        new AnimationSpeedElement(),
+                        new LeakCanaryElement(),
+                        new RiseAndShineElement(),
+                        new ToggleElement("Show grid", false, true) {
+                            @Override
+                            public void onSwitch(boolean b) {
+                                tilesView.setDebug(b);
+                            }
+                        })
+                .modules(
+                        new BuildModule(),
+                        new DeviceInfoModule(),
+                        new MadgeModule(),
+                        new ScalpelModule(),
+                        new GhostModule())
+                .bind(this);
+
         tilesView = (TilesView) findViewById(R.id.tilesView);
         InputStream inputStream = null;
 
