@@ -19,10 +19,13 @@ import java.util.List;
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
-    private static final int MAX_ZOOM_LEVEL = 300;
+    // Zoom level starts at 10, must be 10 plus a power of 2
+    private static final int MAX_ZOOM_LEVEL = 10 + (int) Math.pow(2, 8);
+    private static final int MIN_ZOOM_LEVEL = 5;
     private static final int DOUBLE_TAP_DURATION = 400;
     private static final Interpolator DOUBLE_TAP_INTERPOLATOR = new DecelerateInterpolator();
     private static final float DOUBLE_TAP_SCALE = 2f;
+    private static final long SCALE_ADJUSTMENT_DURATION = 200;
 
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
@@ -42,25 +45,22 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private Paint debugPaint;
     private Paint backgroundPaint;
 
-    private int backgroundColor;
-
     private ScrollAndZoomDetector scrollAndZoomDetector;
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
     private List<Layer> layers = new ArrayList<Layer>();
     private boolean debug = false;
-    private int doubleTapZoomLevelDiff = 4;
-
+    private ValueAnimator currentAnimator;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        this.backgroundColor = Color.BLACK;
+        int backgroundColor = Color.BLACK;
         if (getBackground() instanceof ColorDrawable)
-            this.backgroundColor = ((ColorDrawable) getBackground()).getColor();
+            backgroundColor = ((ColorDrawable) getBackground()).getColor();
         this.tilePool = new TilePool(backgroundColor, this);
-        this.scale = 1;
-        this.zoomLevel = (int) (this.scale * 10);
+        this.scale = 1f;
+        this.zoomLevel = zoomLevelForScale(scale);
         this.offsetX = -getPaddingLeft();
         this.offsetY = -getPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
@@ -84,10 +84,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public void setDebug(boolean debug) {
         this.debug = debug;
         invalidate();
-    }
-
-    public void setDoubleTapZoomLevelDiff(int doubleTapZoomLevelDiff) {
-        this.doubleTapZoomLevelDiff = doubleTapZoomLevelDiff;
     }
 
     @Override
@@ -123,8 +119,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         int xGridIndexStart = Math.max(0, xIndexStart);
         int yGridIndexStart = Math.max(0, yIndexStart);
-        int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
-        int yGridIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
+        int xGridIndexStop = Math.min(xIndexStop, (int) Math.floor(contentWidth / tileSizeOnContent));
+        int yGridIndexStop = Math.min(yIndexStop, (int) Math.floor(contentHeight / tileSizeOnContent));
 
         /*
          * Loop through the 2D grid. This loop is a little complex
@@ -328,6 +324,12 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     @Override
+    public void onDown() {
+        if (currentAnimator != null)
+            currentAnimator.cancel();
+    }
+
+    @Override
     public boolean onScroll(float distanceX, float distanceY) {
         offsetX += distanceX;
         offsetY += distanceY;
@@ -355,42 +357,57 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
-        zoomLevel = Math.min(MAX_ZOOM_LEVEL, Math.round(scale * 10f));
+        zoomLevel = zoomLevelForScale(scale);
         invalidate();
         return true;
+    }
+
+    /** Return an appropriate zoom level for the given scale */
+    private int zoomLevelForScale(float scale) {
+        double scaleFrom0x10 = Math.round(scale * 10) - 10d;
+        int test = (int) Math.round(Math.log(scaleFrom0x10) / Math.log(2));
+        int result = (int) (10 + Math.pow(2, test));
+        if (scale < 1f) {
+            result = Math.max(MIN_ZOOM_LEVEL, Math.round(scale * 10f));
+        }
+        return Math.min(MAX_ZOOM_LEVEL, result);
     }
 
     @Override
     public boolean onDoubleTap(final float focusX, final float focusY) {
-        final ValueAnimator valueAnimator = ValueAnimator.ofFloat(scale, Math.round(scale * DOUBLE_TAP_SCALE * 10f) / 10f);
-        valueAnimator.setDuration(DOUBLE_TAP_DURATION);
-        valueAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
-        valueAnimator.start();
+        animateScaleTo(Math.round(scale * DOUBLE_TAP_SCALE * 10f) / 10f, focusX, focusY, DOUBLE_TAP_DURATION);
+        return true;
+    }
 
+    private void animateScaleTo(final float newScale, final float focusXOnScreen, final float focusYOnScreen, final long duration) {
+        currentAnimator = ValueAnimator.ofFloat(scale, newScale);
+        currentAnimator.setDuration(duration);
+        currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
+        currentAnimator.start();
         Runnable animation = new Runnable() {
             @Override
             public void run() {
-                Float animatedValue = (Float) valueAnimator.getAnimatedValue();
-                onScale(animatedValue / scale, focusX, focusY);
+                Float animatedValue = (Float) currentAnimator.getAnimatedValue();
+                onScale(animatedValue / scale, focusXOnScreen, focusYOnScreen);
                 invalidate();
-
-                if (valueAnimator.isRunning()) {
+                if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
-                } else {
-                    onScaleEnd();
+                } else if (animatedValue == newScale) {
+                    onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
+                    onScaleEnd(focusXOnScreen, focusYOnScreen);
                 }
-
             }
         };
 
         postOnAnimation(animation);
-        return true;
     }
 
     @Override
-    public void onScaleEnd() {
-        this.scale = Math.round(this.scale * 10f) / 10f;
-        invalidate();
+    public void onScaleEnd(float focusX, float focusY) {
+        this.zoomLevel = zoomLevelForScale(scale);
+        if (scale != zoomLevel / 10f) {
+            animateScaleTo(zoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
+        }
     }
 
     @Override

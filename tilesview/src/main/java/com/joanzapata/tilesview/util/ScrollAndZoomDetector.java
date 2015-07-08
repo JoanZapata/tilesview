@@ -31,6 +31,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onDown(MotionEvent e) {
+        scrollAndZoomListener.onDown();
         if (overScroller != null)
             overScroller.forceFinished(true);
         return true;
@@ -91,7 +92,10 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onScale(ScaleGestureDetector detector) {
-        return scrollAndZoomListener.onScale(detector.getScaleFactor(), detector.getFocusX(), detector.getFocusY());
+        lastScaleFocusX = detector.getFocusX();
+        lastScaleFocusY = detector.getFocusY();
+        return scrollAndZoomListener.onScale(detector.getScaleFactor(),
+                detector.getFocusX(), detector.getFocusY());
     }
 
     @Override
@@ -99,9 +103,11 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
         return true;
     }
 
+    float lastScaleFocusX, lastScaleFocusY;
+
     @Override
     public void onScaleEnd(ScaleGestureDetector detector) {
-        scrollAndZoomListener.onScaleEnd();
+        scrollAndZoomListener.onScaleEnd(lastScaleFocusX, lastScaleFocusY);
     }
 
     @Override
@@ -120,13 +126,16 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
     }
 
     public interface ScrollAndZoomListener {
+
+        void onDown();
+
         boolean onScroll(float distanceX, float distanceY);
 
         boolean onScale(float scaleFactor, float focusX, float focusY);
 
         boolean onDoubleTap(float focusX, float focusY);
 
-        void onScaleEnd();
+        void onScaleEnd(float focusX, float focusY);
     }
 
 }
