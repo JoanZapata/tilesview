@@ -17,7 +17,8 @@ import java.util.List;
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
-    private static final int EXPAND_DURING_SCALE = 1;
+
+    private static final int MAX_ZOOM_LEVEL = 300;
 
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
@@ -101,12 +102,15 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         // Find the top left index for the current scale and canvas size
         float zoomDiff = scale / (zoomLevel / 10f);
-        float xOffsetOnContent = offsetX * zoomDiff;
-        float yOffsetOnContent = offsetY * zoomDiff;
-        int xIndexStart = (int) (xOffsetOnContent / TILE_SIZE);
-        int yIndexStart = (int) (yOffsetOnContent / TILE_SIZE);
-        int xIndexStop = (int) ((xOffsetOnContent + getWidth()) / TILE_SIZE);
-        int yIndexStop = (int) ((yOffsetOnContent + getHeight()) / TILE_SIZE);
+        float xOffsetOnContent = offsetX / scale;
+        float yOffsetOnContent = offsetY / scale;
+        float screenWidthOnContent = getWidth() / scale;
+        float screenHeightOnContent = getHeight() / scale;
+        float tileSizeOnContent = TILE_SIZE / (zoomLevel / 10f);
+        int xIndexStart = (int) (xOffsetOnContent / tileSizeOnContent);
+        int yIndexStart = (int) (yOffsetOnContent / tileSizeOnContent);
+        int xIndexStop = (int) ((xOffsetOnContent + screenWidthOnContent) / tileSizeOnContent);
+        int yIndexStop = (int) ((yOffsetOnContent + screenHeightOnContent) / tileSizeOnContent);
 
         // Adjustments for edge cases
         if (xOffsetOnContent < 0) xIndexStart--;
@@ -117,18 +121,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         int xGridIndexStop = (int) Math.min(Math.ceil(contentWidth * scale / TILE_SIZE) - 1, xIndexStop);
         int yGridIndexStop = (int) Math.min(Math.ceil(contentHeight * scale / TILE_SIZE) - 1, yIndexStop);
 
-        if (zoomDiff != 1) {
-            // FIXME could be more accurate, should only expand required values to fill the screen
-            xIndexStart -= EXPAND_DURING_SCALE;
-            yIndexStart -= EXPAND_DURING_SCALE;
-            xIndexStop += EXPAND_DURING_SCALE;
-            yIndexStop += EXPAND_DURING_SCALE;
-            xGridIndexStart -= EXPAND_DURING_SCALE;
-            yGridIndexStart -= EXPAND_DURING_SCALE;
-            xGridIndexStop += EXPAND_DURING_SCALE;
-            yGridIndexStop += EXPAND_DURING_SCALE;
-        }
-
         /*
          * Loop through the 2D grid. This loop is a little complex
          * because it starts at the top left corner and reach the
@@ -136,7 +128,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
          */
         int xIndex = xIndexStart;
         int yIndex = yIndexStart;
-        while (xIndex < xIndexStop || yIndex < yIndexStop) {
+        while (xIndex <= xIndexStop || yIndex <= yIndexStop) {
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
@@ -319,8 +311,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        double tilesOnWidth = Math.ceil(w / (TILE_SIZE * 0.9f)) + 1 + EXPAND_DURING_SCALE * 2;
-        double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1 + EXPAND_DURING_SCALE * 2;
+        double tilesOnWidth = Math.ceil(w / (TILE_SIZE * 0.9f)) + 1;
+        double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1;
         int maxTilesOnScreen = (int) (tilesOnWidth * tilesOnHeight);
         tilePool.setMaxTasks(maxTilesOnScreen);
     }
@@ -358,7 +350,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
-        zoomLevel = Math.round(scale * 10f);
+        zoomLevel = Math.min(MAX_ZOOM_LEVEL, Math.round(scale * 10f));
         invalidate();
         return true;
     }
@@ -391,7 +383,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public void onScaleEnd() {
-        this.scale = this.zoomLevel / 10f;
+        this.scale = Math.round(this.scale * 10f) / 10f;
         invalidate();
     }
 
