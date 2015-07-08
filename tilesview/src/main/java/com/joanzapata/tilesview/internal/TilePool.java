@@ -63,13 +63,6 @@ public class TilePool {
         // Get it
         Tile tile = tiles[xIndex][yIndex];
 
-        if (tile != null)
-            tileMRU = tile.becomeMRU(tileMRU);
-
-        // If currently rendering, ignore
-        if (tile != null && tile.getState() == Tile.STATE_RENDERING)
-            return null;
-
         // If null request a rendering
         if (tile == null) {
 
@@ -85,7 +78,11 @@ public class TilePool {
                 tilesByZoomLevel.get(tileLRU.getZoomLevel())[tileLRU.getxIndex()][tileLRU.getyIndex()] = null;
                 nbTiles--;
             }
-            tileMRU = tile.becomeMRU(tileMRU);
+
+            if (tile == tileLRU) {
+                tileLRU = tile.getNewerTile();
+            }
+
             nbTiles++;
 
             tile.setState(Tile.STATE_RENDERING);
@@ -96,6 +93,9 @@ public class TilePool {
                     existingBitmap));
 
         }
+
+        // Make this tile the most recently used one
+        tileMRU = tile.becomeMRU(tileMRU);
 
         // Return the bitmap of the created tile
         return tile.getBitmap();

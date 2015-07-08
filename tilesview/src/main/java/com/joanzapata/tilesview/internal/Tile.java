@@ -68,6 +68,7 @@ public class Tile {
             newerTile.olderTile = olderTile;
         if (olderTile != null)
             olderTile.newerTile = newerTile;
+        newerTile = null;
         if (lastMRU != this) {
             olderTile = lastMRU;
             if (lastMRU != null)
@@ -82,5 +83,9 @@ public class Tile {
         newerTile = null;
         olderTile = null;
         return newLRU;
+    }
+
+    public Tile getNewerTile() {
+        return newerTile;
     }
 }
