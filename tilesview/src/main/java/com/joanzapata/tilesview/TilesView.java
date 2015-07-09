@@ -52,6 +52,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private Paint backgroundPaint;
 
     private ScrollAndZoomDetector scrollAndZoomDetector;
+
+    private OnContentTappedListener onContentTappedListener;
+
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
     private List<Layer> layers = new ArrayList<Layer>();
@@ -119,6 +122,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public TilesView setOnZoomLevelChangedListener(OnZoomLevelChangedListener onZoomLevelChangedListener) {
         this.onZoomLevelChangedListener = onZoomLevelChangedListener;
+        return this;
+    }
+
+    public TilesView setOnContentTappedListener(OnContentTappedListener onContentTappedListener) {
+        this.onContentTappedListener = onContentTappedListener;
         return this;
     }
 
@@ -475,6 +483,19 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         bestZoomLevel = Math.min(Math.max(bestZoomLevel, userMinZoomLevel), userMaxZoomLevel);
         if (scale != bestZoomLevel / 10f) {
             animateScaleTo(bestZoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
+        }
+    }
+
+    @Override
+    public void onSingleTap(float screenX, float screenY) {
+        if (onContentTappedListener != null) {
+            float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+            float contentHeight = getHeight() - getPaddingLeft() - getPaddingRight();
+            float contentX = (screenX + offsetX) / scale;
+            float contentY = (screenY + offsetY) / scale;
+            onContentTappedListener.onContentTapped(
+                    contentX / contentWidth, contentY / contentHeight,
+                    contentWidth, contentHeight, scale);
         }
     }
 

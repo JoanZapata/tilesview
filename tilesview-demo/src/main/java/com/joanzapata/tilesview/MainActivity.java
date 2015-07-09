@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.widget.SeekBar;
+import com.joanzapata.tilesview.util.FixedImageSizeTappedListener;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
 import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
 import com.jug6ernaut.debugdrawer.DebugDrawer;
@@ -24,6 +26,7 @@ public class MainActivity extends Activity {
 
     private static final int MIN_ZOOM_LEVEL = 10;
     private static final int MAX_ZOOM_LEVEL = 22;
+
     TilesView tilesView;
 
     SeekBar seekBar;
@@ -63,14 +66,13 @@ public class MainActivity extends Activity {
             final BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(inputStream, false);
 
             final List<POI> pois = Arrays.asList(
-                    new POI(this, R.drawable.tajmahal, 3918, 990, 5 / 7f),
-                    new POI(this, R.drawable.bigben, 2724.5f, 552f, 4 / 5f),
-                    new POI(this, R.drawable.eiffel, 2756.5f, 598, 4 / 5f),
-                    new POI(this, R.drawable.colosseum, 2898.5f, 721.5f, 2 / 3f),
-                    new POI(this, R.drawable.egypt, 3188, 935, 2 / 3f),
-                    new POI(this, R.drawable.liberty, 1636, 742, 4 / 5f));
+                    new POI("Tajmahal", this, R.drawable.tajmahal, 3918, 990, 5 / 7f),
+                    new POI("Big Ben", this, R.drawable.bigben, 2724.5f, 552f, 4 / 5f),
+                    new POI("Eiffel Tower", this, R.drawable.eiffel, 2756.5f, 598, 4 / 5f),
+                    new POI("Coliseum", this, R.drawable.colosseum, 2898.5f, 721.5f, 2 / 3f),
+                    new POI("Egypt", this, R.drawable.egypt, 3188, 935, 2 / 3f),
+                    new POI("Statue of Liberty", this, R.drawable.liberty, 1636, 742, 4 / 5f));
 
-            final Paint paint = new Paint();
             final int sourceWidth = decoder.getWidth();
             final int sourceHeight = decoder.getHeight();
             seekBar.setMax(MAX_ZOOM_LEVEL - MIN_ZOOM_LEVEL);
@@ -87,7 +89,7 @@ public class MainActivity extends Activity {
                             options.inPreferredConfig = Bitmap.Config.RGB_565;
                             options.inPreferQualityOverSpeed = true;
                             Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
-                            canvas.drawBitmap(tmpBitmap, null, destRect, paint);
+                            canvas.drawBitmap(tmpBitmap, null, destRect, null);
                             tmpBitmap.recycle();
                         }
                     })
@@ -100,6 +102,18 @@ public class MainActivity extends Activity {
                                         scaled(poi.offsetX) + poi.deltaX,
                                         scaled(poi.offsetY) + poi.deltaY,
                                         null);
+                            }
+                        }
+                    })
+                    .setOnContentTappedListener(new FixedImageSizeTappedListener(sourceWidth, sourceHeight) {
+                        @Override
+                        protected void contentTapped(float x, float y, float scale) {
+                            for (int i = pois.size() - 1; i >= 0; i--) {
+                                POI poi = pois.get(i);
+                                if (poi.contains(x, y, scale)) {
+                                    Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
+                                    return;
+                                }
                             }
                         }
                     })
@@ -154,13 +168,22 @@ public class MainActivity extends Activity {
 
         final float deltaX, deltaY;
 
-        public POI(Context context, int bitmapRes, float offsetX, float offsetY, float yAnchorRatio) {
-            bitmap = BitmapFactory.decodeResource(context.getResources(), bitmapRes);
-            this.offsetX = offsetX;
-            this.offsetY = offsetY;
+        final String name;
+
+        public POI(String name, Context context, int bitmapRes, float offsetX, float offsetY, float yAnchorRatio) {
+            this.bitmap = BitmapFactory.decodeResource(context.getResources(), bitmapRes);
             this.deltaX = -bitmap.getWidth() * 0.5f;
             this.deltaY = -bitmap.getHeight() * yAnchorRatio;
+            this.offsetX = offsetX;
+            this.offsetY = offsetY;
+            this.name = name;
         }
 
+        public boolean contains(float x, float y, float scale) {
+            float distance = (float) Math.sqrt(
+                    (offsetX - x) * (offsetX - x) +
+                            (offsetY - y) * (offsetY - y));
+            return distance <= bitmap.getWidth() / scale / 2f;
+        }
     }
 }

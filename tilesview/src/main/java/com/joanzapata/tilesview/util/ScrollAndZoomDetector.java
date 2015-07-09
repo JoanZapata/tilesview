@@ -46,7 +46,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
-        return false;
+        return true;
     }
 
     @Override
@@ -113,7 +113,8 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
 
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
-        return false;
+        scrollAndZoomListener.onSingleTap(e.getX(), e.getY());
+        return true;
     }
 
     @Override
@@ -140,6 +141,8 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
         boolean onDoubleTap(float focusX, float focusY);
 
         void onScaleEnd(float focusX, float focusY, float lastScaleFactor);
+
+        void onSingleTap(float x, float y);
     }
 
 }
