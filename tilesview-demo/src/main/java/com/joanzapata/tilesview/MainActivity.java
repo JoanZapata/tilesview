@@ -6,6 +6,7 @@ import android.graphics.*;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.widget.SeekBar;
+import com.joanzapata.tilesview.util.FixedImageSizeAnimator;
 import com.joanzapata.tilesview.util.FixedImageSizeTappedListener;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
 import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
@@ -76,6 +77,7 @@ public class MainActivity extends Activity {
             final int sourceWidth = decoder.getWidth();
             final int sourceHeight = decoder.getHeight();
             seekBar.setMax(MAX_ZOOM_LEVEL - MIN_ZOOM_LEVEL);
+            final FixedImageSizeAnimator animator = new FixedImageSizeAnimator(tilesView, sourceWidth, sourceHeight);
             tilesView.setDebug(toggleElement.isChecked())
                     .setMinZoomLevel(MIN_ZOOM_LEVEL)
                     .setMaxZoomLevel(MAX_ZOOM_LEVEL)
@@ -112,9 +114,12 @@ public class MainActivity extends Activity {
                                 POI poi = pois.get(i);
                                 if (poi.contains(x, y, scale)) {
                                     Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
+                                    animator.animateTo(poi.offsetX, poi.offsetY);
                                     return;
                                 }
                             }
+
+                            animator.animateTo(x, y);
                         }
                     })
                     .setOnZoomLevelChangedListener(new OnZoomLevelChangedListener() {

@@ -453,6 +453,39 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return true;
     }
 
+    public void animateTo(float x, float y) {
+        if (currentAnimator != null) currentAnimator.cancel();
+        currentAnimator = ValueAnimator.ofFloat(0f, 1f);
+        currentAnimator.setDuration(DOUBLE_TAP_DURATION);
+        currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
+        currentAnimator.start();
+        float xScreenCenterOnContent = (offsetX + getWidth() / 2f) / scale;
+        float yScreenCenterOnContent = (offsetY + getHeight() / 2f) / scale;
+        final float xDistanceOnContent = x - xScreenCenterOnContent;
+        final float yDistanceOnContent = y - yScreenCenterOnContent;
+        final float xOriginOnContent = offsetX / scale, yOriginOnContent = offsetY / scale;
+
+        Runnable animation = new Runnable() {
+            @Override
+            public void run() {
+                Float animatedValue = (Float) currentAnimator.getAnimatedValue();
+                float xOffsetOnContent = xOriginOnContent + animatedValue * xDistanceOnContent;
+                float yOffsetOnContent = yOriginOnContent + animatedValue * yDistanceOnContent;
+                onScroll(xOffsetOnContent * scale - offsetX, yOffsetOnContent * scale - offsetY);
+
+                invalidate();
+                if (currentAnimator.isRunning()) {
+                    postOnAnimation(this);
+                } else if (animatedValue == 1f) {
+                    onScroll((xOriginOnContent + xDistanceOnContent) * scale - offsetX,
+                            (yOriginOnContent + yDistanceOnContent) * scale - offsetY);
+                }
+            }
+        };
+
+        postOnAnimation(animation);
+    }
+
     private void animateScaleTo(final float newScale, final float focusXOnScreen, final float focusYOnScreen, final long duration) {
         if (currentAnimator != null) currentAnimator.cancel();
         currentAnimator = ValueAnimator.ofFloat(scale, newScale);
@@ -531,4 +564,13 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         animateScaleTo(zoomLevel / 10f, getWidth() / 2f, getHeight() / 2f, SCALE_ADJUSTMENT_DURATION);
 
     }
+
+    public float getContentWidth() {
+        return getWidth() - getPaddingLeft() - getPaddingRight();
+    }
+
+    public float getContentHeight() {
+        return getHeight() - getPaddingTop() - getPaddingBottom();
+    }
+
 }
