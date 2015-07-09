@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.*;
 import android.os.Bundle;
+import android.widget.SeekBar;
 import com.joanzapata.tilesview.util.FixedImageSizeTileRenderer;
 import com.joanzapata.tilesview.util.LayerOnFixedImageSize;
 import com.jug6ernaut.debugdrawer.DebugDrawer;
@@ -21,23 +22,30 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
+    private static final int MIN_ZOOM_LEVEL = 14;
+    private static final int MAX_ZOOM_LEVEL = 22;
     TilesView tilesView;
+
+    SeekBar seekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ToggleElement toggleElement = new ToggleElement("Show grid", false, true) {
+            @Override
+            public void onSwitch(boolean b) {
+                tilesView.setDebug(b);
+            }
+        };
+
         new DebugDrawer()
                 .elements("UI",
                         new AnimationSpeedElement(),
                         new LeakCanaryElement(),
                         new RiseAndShineElement(),
-                        new ToggleElement("Show grid", false, true) {
-                            @Override
-                            public void onSwitch(boolean b) {
-                                tilesView.setDebug(b);
-                            }
-                        })
+                        toggleElement)
                 .modules(
                         new BuildModule(),
                         new DeviceInfoModule(),
@@ -47,31 +55,12 @@ public class MainActivity extends Activity {
                 .bind(this);
 
         tilesView = (TilesView) findViewById(R.id.tilesView);
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
         InputStream inputStream = null;
 
         try {
             inputStream = getResources().getAssets().open("world.jpg");
             final BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(inputStream, false);
-
-            final Paint paint = new Paint();
-            final int sourceWidth = decoder.getWidth();
-            final int sourceHeight = decoder.getHeight();
-            tilesView.setDebug(false);
-            tilesView.setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
-                @Override
-                public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
-                    Rect sourceRect = new Rect(
-                            (int) sourceRectF.left, (int) sourceRectF.top,
-                            (int) sourceRectF.right, (int) sourceRectF.bottom);
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inPreferredConfig = Bitmap.Config.RGB_565;
-                    options.inPreferQualityOverSpeed = true;
-                    Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
-                    canvas.drawBitmap(tmpBitmap, null, destRect, paint);
-                    tmpBitmap.recycle();
-
-                }
-            });
 
             final List<POI> pois = Arrays.asList(
                     new POI(this, R.drawable.tajmahal, 3918, 990, 5 / 7f),
@@ -80,18 +69,65 @@ public class MainActivity extends Activity {
                     new POI(this, R.drawable.colosseum, 2898.5f, 721.5f, 2 / 3f),
                     new POI(this, R.drawable.egypt, 3188, 935, 2 / 3f),
                     new POI(this, R.drawable.liberty, 1636, 742, 4 / 5f));
-            tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
+
+            final Paint paint = new Paint();
+            final int sourceWidth = decoder.getWidth();
+            final int sourceHeight = decoder.getHeight();
+            seekBar.setMax(MAX_ZOOM_LEVEL - MIN_ZOOM_LEVEL);
+            tilesView.setDebug(toggleElement.isChecked())
+                    .setMinZoomLevel(MIN_ZOOM_LEVEL)
+                    .setMaxZoomLevel(MAX_ZOOM_LEVEL)
+                    .setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
+                        @Override
+                        public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
+                            Rect sourceRect = new Rect(
+                                    (int) sourceRectF.left, (int) sourceRectF.top,
+                                    (int) sourceRectF.right, (int) sourceRectF.bottom);
+                            BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inPreferredConfig = Bitmap.Config.RGB_565;
+                            options.inPreferQualityOverSpeed = true;
+                            Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
+                            canvas.drawBitmap(tmpBitmap, null, destRect, paint);
+                            tmpBitmap.recycle();
+                        }
+                    })
+                    .addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
+                        @Override
+                        public void renderLayer(Canvas canvas) {
+                            for (int i = 0; i < pois.size(); i++) {
+                                POI poi = pois.get(i);
+                                canvas.drawBitmap(poi.bitmap,
+                                        scaled(poi.offsetX) + poi.deltaX,
+                                        scaled(poi.offsetY) + poi.deltaY,
+                                        null);
+                            }
+                        }
+                    })
+                    .setOnZoomLevelChangedListener(new OnZoomLevelChangedListener() {
+                        @Override
+                        public void onZoomLevelChanged(int zoomLevel) {
+                            seekBar.setProgress(zoomLevel - MIN_ZOOM_LEVEL);
+                        }
+                    });
+
+            seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
-                public void renderLayer(Canvas canvas) {
-                    for (int i = 0; i < pois.size(); i++) {
-                        POI poi = pois.get(i);
-                        canvas.drawBitmap(poi.bitmap,
-                                scaled(poi.offsetX) + poi.deltaX,
-                                scaled(poi.offsetY) + poi.deltaY,
-                                null);
-                    }
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (fromUser)
+                        tilesView.setZoomLevel(MIN_ZOOM_LEVEL + progress);
+                }
+
+                @Override
+                public void onStartTrackingTouch(SeekBar seekBar) {
+
+                }
+
+                @Override
+                public void onStopTrackingTouch(SeekBar seekBar) {
+
                 }
             });
+
 
         } catch (IOException e) {
             e.printStackTrace();

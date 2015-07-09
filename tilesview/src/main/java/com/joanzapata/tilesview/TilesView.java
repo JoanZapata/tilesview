@@ -24,24 +24,26 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private static final int MIN_ZOOM_LEVEL = 5;
     private static final int DOUBLE_TAP_DURATION = 400;
     private static final Interpolator DOUBLE_TAP_INTERPOLATOR = new DecelerateInterpolator();
-    private static final float DOUBLE_TAP_SCALE = 2f;
     private static final long SCALE_ADJUSTMENT_DURATION = 200;
-
     public static final int SCALE_TYPE_FLOOR = 1;
     public static final int SCALE_TYPE_CEIL = 2;
     public static final int SCALE_TYPE_ROUND = 3;
 
+    /**
+     * 5-9 = content is smaller than the screen
+     * 10 = fit the screen
+     * > 10 = zoomed in, should be a power of two
+     */
+    private int userMinZoomLevel = 5, userMaxZoomLevel = (int) Math.pow(2, 8);
+
+    /** X and Y offset of the top left corner of the screen in the global image */
+    private float offsetX, offsetY;
+
     /** Initial scale is 1, scale can't be < 1 */
     private float scale;
 
-    /** X offset of the top left corner of the screen in the global image */
-    private float offsetX;
-
-    /** Y offset of the top left corner of the screen in the global image */
-    private float offsetY;
-
     /** Zoom level is scale * 10 rounded to the nearest integer (e.g. 12 for x1,23) */
-    private int zoomLevel;
+    private int zoomLevel, zoomLevelWithUserBounds;
 
     /** Retains all tiles in memory */
     private TilePool tilePool;
@@ -55,6 +57,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private List<Layer> layers = new ArrayList<Layer>();
     private boolean debug = false;
     private ValueAnimator currentAnimator;
+    private OnZoomLevelChangedListener onZoomLevelChangedListener;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -81,13 +84,63 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         setBackground(null);
     }
 
-    public void addLayer(Layer layer) {
+    public TilesView addLayer(Layer layer) {
         layers.add(layer);
+        return this;
     }
 
-    public void setDebug(boolean debug) {
+    public TilesView setDebug(boolean debug) {
         this.debug = debug;
         invalidate();
+        return this;
+    }
+
+    public TilesView setMinZoomLevel(int minZoomLevel) {
+        if (minZoomLevel > 10) {
+            minZoomLevel = 10 + (int) Math.round(Math.pow(2, (minZoomLevel - 10)));
+        }
+        this.userMinZoomLevel = minZoomLevel;
+        if (isSized()) {
+            applyScaleBounds();
+        }
+        return this;
+    }
+
+    public TilesView setMaxZoomLevel(int maxZoomLevel) {
+        if (maxZoomLevel > 10) {
+            maxZoomLevel = 10 + (int) Math.round(Math.pow(2, (maxZoomLevel - 10)));
+        }
+        this.userMaxZoomLevel = maxZoomLevel;
+        if (isSized()) {
+            applyScaleBounds();
+        }
+        return this;
+    }
+
+    public TilesView setOnZoomLevelChangedListener(OnZoomLevelChangedListener onZoomLevelChangedListener) {
+        this.onZoomLevelChangedListener = onZoomLevelChangedListener;
+        return this;
+    }
+
+    public int getMinZoomLevel() {
+        int minZoomLevel = this.userMinZoomLevel;
+        if (minZoomLevel > 10)
+            minZoomLevel = (int) (10 + Math.log(minZoomLevel - 10) / Math.log(2));
+        return minZoomLevel;
+    }
+
+    public int getMaxZoomLevel() {
+        int maxZoomLevel = this.userMaxZoomLevel;
+        if (maxZoomLevel > 10)
+            maxZoomLevel = (int) (10 + Math.log(maxZoomLevel - 10) / Math.log(2));
+        return maxZoomLevel;
+    }
+
+    public int getZoomLevel() {
+        int zoomLevel = this.zoomLevelWithUserBounds;
+        if (zoomLevel > 10)
+            zoomLevel = (int) (10 + Math.log(zoomLevel - 10) / Math.log(2));
+        return zoomLevel;
     }
 
     @Override
@@ -270,7 +323,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
                 canvas.drawBitmap(placeholder, reusableRect, reusableRectF, null);
 
-
             } else {
                 // Draw the background otherwise
                 canvas.drawRect(left, top, right, bottom, backgroundPaint);
@@ -304,13 +356,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         }
     }
 
-    public void setTileRenderer(TileRenderer tileRenderer) {
-        setTileRenderer(tileRenderer, true);
+    public TilesView setTileRenderer(TileRenderer tileRenderer) {
+        return setTileRenderer(tileRenderer, true);
     }
 
-    public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+    public TilesView setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
         tilePool.setTileRenderer(tileRenderer, threadSafe);
         postInvalidate();
+        return this;
     }
 
     @Override
@@ -320,6 +373,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         double tilesOnHeight = Math.ceil(h / (TILE_SIZE * 0.9f)) + 1;
         int maxTilesOnScreen = (int) (tilesOnWidth * tilesOnHeight);
         tilePool.setMaxTasks(maxTilesOnScreen);
+        applyScaleBounds();
+    }
+
+    private void applyScaleBounds() {
+        onScaleEnd(getWidth() / 2f, getHeight() / 2f, 1f);
     }
 
     @Override
@@ -361,7 +419,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
-        zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
+        int newZoomLevelWithoutBounds = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
+        int newZoomLevelWithUserBounds = Math.max(Math.min(newZoomLevelWithoutBounds, userMaxZoomLevel), userMinZoomLevel);
+        if (onZoomLevelChangedListener != null && zoomLevelWithUserBounds != newZoomLevelWithUserBounds) {
+            zoomLevelWithUserBounds = newZoomLevelWithUserBounds;
+            onZoomLevelChangedListener.onZoomLevelChanged(getZoomLevel());
+        }
+
+        zoomLevel = Math.min(MAX_ZOOM_LEVEL, Math.max(MIN_ZOOM_LEVEL, newZoomLevelWithoutBounds));
         invalidate();
         return true;
     }
@@ -373,6 +438,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     private void animateScaleTo(final float newScale, final float focusXOnScreen, final float focusYOnScreen, final long duration) {
+        if (currentAnimator != null) currentAnimator.cancel();
         currentAnimator = ValueAnimator.ofFloat(scale, newScale);
         currentAnimator.setDuration(duration);
         currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
@@ -397,9 +463,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public void onScaleEnd(float focusX, float focusY, float lastScaleFactor) {
-        this.zoomLevel = zoomLevelForScale(scale, lastScaleFactor >= 1 ? SCALE_TYPE_CEIL : SCALE_TYPE_FLOOR);
-        if (scale != zoomLevel / 10f && scale < MAX_ZOOM_LEVEL / 10f) {
-            animateScaleTo(zoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
+        int bestZoomLevel = zoomLevelForScale(scale, lastScaleFactor >= 1 ? SCALE_TYPE_CEIL : SCALE_TYPE_FLOOR);
+        bestZoomLevel = Math.min(Math.max(bestZoomLevel, userMinZoomLevel), userMaxZoomLevel);
+        if (scale != bestZoomLevel / 10f) {
+            animateScaleTo(bestZoomLevel / 10f, focusX, focusY, SCALE_ADJUSTMENT_DURATION);
         }
     }
 
@@ -412,14 +479,27 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                         Math.round(exactValue));
         int result = (int) (10 + Math.pow(2, roundedValue));
         if (scale < 1f) {
-            result = Math.max(MIN_ZOOM_LEVEL, Math.round(scale * 10f));
+            result = Math.round(scale * 10f);
         }
-        return Math.min(MAX_ZOOM_LEVEL, result);
+        return result;
     }
-
 
     @Override
     public void onTileRendered(Tile tile) {
         postInvalidate();
+    }
+
+    private boolean isSized() {
+        return getWidth() != 0 && getHeight() != 0;
+    }
+
+    public void setZoomLevel(int zoomLevel) {
+        if (zoomLevel < getMinZoomLevel() || zoomLevel > getMaxZoomLevel()) {
+            throw new IllegalArgumentException("Zoom level should be between " + getMinZoomLevel() + " and " + getMaxZoomLevel() + ".");
+        }
+        if (zoomLevel > 10)
+            zoomLevel = (int) (10 + Math.pow(2, zoomLevel - 10));
+        animateScaleTo(zoomLevel / 10f, getWidth() / 2f, getHeight() / 2f, SCALE_ADJUSTMENT_DURATION);
+
     }
 }
