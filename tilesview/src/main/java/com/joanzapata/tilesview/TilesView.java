@@ -395,6 +395,16 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public boolean onScroll(float distanceX, float distanceY) {
         offsetX += distanceX;
         offsetY += distanceY;
+
+        float minOffsetX = -getPaddingLeft();
+        float minOffsetY = -getPaddingTop();
+        float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+        float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+        float maxOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
+        float maxOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
+        offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
+        offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
+
         invalidate();
         return true;
     }
@@ -409,14 +419,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         float contentFocusXBefore = offsetX + focusX;
         float contentFocusXBeforeRatio = contentFocusXBefore / contentWidthBefore;
         float contentFocusXAfter = contentFocusXBeforeRatio * contentWidthAfter;
-        offsetX += contentFocusXAfter - contentFocusXBefore;
-
         float contentHeightBefore = getHeight() * scale;
         float contentHeightAfter = getHeight() * newScale;
         float contentFocusYBefore = offsetY + focusY;
         float contentFocusYBeforeRatio = contentFocusYBefore / contentHeightBefore;
         float contentFocusYAfter = contentFocusYBeforeRatio * contentHeightAfter;
-        offsetY += contentFocusYAfter - contentFocusYBefore;
 
         scale = newScale;
         int newZoomLevelWithoutBounds = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
@@ -426,6 +433,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             onZoomLevelChangedListener.onZoomLevelChanged(getZoomLevel());
         }
 
+        onScroll(contentFocusXAfter - contentFocusXBefore, contentFocusYAfter - contentFocusYBefore);
         zoomLevel = Math.min(MAX_ZOOM_LEVEL, Math.max(MIN_ZOOM_LEVEL, newZoomLevelWithoutBounds));
         invalidate();
         return true;
