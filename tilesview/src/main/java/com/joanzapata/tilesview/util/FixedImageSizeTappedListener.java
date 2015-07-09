@@ -18,13 +18,15 @@ public abstract class FixedImageSizeTappedListener implements OnContentTappedLis
         float xDiff, yDiff;
         float xFactor, yFactor;
         float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
+        float initialScale;
         if (scaledSourceHeight <= contentInitialHeight) {
+            initialScale = contentInitialWidth / sourceWidth;
             xDiff = 0f;
             yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
             xFactor = 1f;
             yFactor = contentInitialHeight / scaledSourceHeight;
         } else {
-            scaledSourceHeight = contentInitialHeight;
+            initialScale = contentInitialHeight / sourceHeight;
             float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
             xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
             yDiff = 0f;
@@ -32,7 +34,6 @@ public abstract class FixedImageSizeTappedListener implements OnContentTappedLis
             yFactor = 1f;
         }
 
-        float initialScale = scaledSourceHeight / contentInitialHeight;
         float contentX = (xRatio + xDiff) * xFactor * sourceWidth;
         float contentY = (yRatio + yDiff) * yFactor * sourceHeight;
 
