@@ -15,6 +15,10 @@ public class FixedImageSizeAnimator {
     }
 
     public void animateTo(float x, float y) {
+        animateTo(x, y, tilesView.getZoomLevel());
+    }
+
+    public void animateTo(float x, float y, int zoomLevel) {
         float contentWidth = tilesView.getContentWidth();
         float contentHeight = tilesView.getContentHeight();
         float xDiff, yDiff, factor;
@@ -30,6 +34,6 @@ public class FixedImageSizeAnimator {
             yDiff = 0f;
         }
 
-        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor);
+        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor, zoomLevel);
     }
 }

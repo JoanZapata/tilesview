@@ -114,7 +114,7 @@ public class MainActivity extends Activity {
                                 POI poi = pois.get(i);
                                 if (poi.contains(x, y, scale)) {
                                     Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
-                                    animator.animateTo(poi.offsetX, poi.offsetY);
+                                    animator.animateTo(poi.offsetX, poi.offsetY, 20);
                                     return;
                                 }
                             }

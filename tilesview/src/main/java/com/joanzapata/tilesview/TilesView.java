@@ -453,6 +453,51 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return true;
     }
 
+    public void animateTo(final float x, final float y, int zoomLevel) {
+        if (currentAnimator != null) currentAnimator.cancel();
+
+        if (zoomLevel > 10)
+            zoomLevel = (int) (10 + Math.pow(2, zoomLevel - 10));
+
+        currentAnimator = ValueAnimator.ofFloat(0f, 1f);
+        currentAnimator.setDuration(DOUBLE_TAP_DURATION);
+        currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
+        currentAnimator.start();
+        final float xScreenCenterOnContent = (offsetX + getWidth() / 2f) / scale;
+        final float yScreenCenterOnContent = (offsetY + getHeight() / 2f) / scale;
+        final float targetScale = zoomLevel / 10f;
+        final float scaleOrigin = scale;
+        final float scaleDistance = targetScale - scale;
+
+        Runnable animation = new Runnable() {
+            @Override
+            public void run() {
+
+                Float animatedValue = (Float) currentAnimator.getAnimatedValue();
+                float xCurrentOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent) * animatedValue;
+                float yCurrentOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent) * animatedValue;
+                onScale((scaleOrigin + scaleDistance * animatedValue) / scale, 0, 0);
+                float xCurrentOffset = xCurrentOnContent * scale - getWidth() / 2f;
+                float yCurrentOffset = yCurrentOnContent * scale - getHeight() / 2f;
+                onScroll(xCurrentOffset - offsetX, yCurrentOffset - offsetY);
+
+                invalidate();
+                if (currentAnimator.isRunning()) {
+                    postOnAnimation(this);
+                } else if (animatedValue == 1f) {
+                    float xFinalOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent);
+                    float yFinalOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent);
+                    onScale((scaleOrigin + scaleDistance) / scale, 0, 0);
+                    float xFinalOffset = xFinalOnContent * scale - getWidth() / 2f;
+                    float yFinalOffset = yFinalOnContent * scale - getHeight() / 2f;
+                    onScroll(xFinalOffset - offsetX, yFinalOffset - offsetY);
+                }
+            }
+        };
+
+        postOnAnimation(animation);
+    }
+
     public void animateTo(float x, float y) {
         if (currentAnimator != null) currentAnimator.cancel();
         currentAnimator = ValueAnimator.ofFloat(0f, 1f);
