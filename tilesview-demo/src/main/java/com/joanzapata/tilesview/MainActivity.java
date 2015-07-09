@@ -22,7 +22,7 @@ import java.util.List;
 
 public class MainActivity extends Activity {
 
-    private static final int MIN_ZOOM_LEVEL = 14;
+    private static final int MIN_ZOOM_LEVEL = 10;
     private static final int MAX_ZOOM_LEVEL = 22;
     TilesView tilesView;
 
@@ -113,18 +113,18 @@ public class MainActivity extends Activity {
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    if (fromUser)
+                    if (fromUser) {
+                        seekBar.setProgress(tilesView.getZoomLevel() - MIN_ZOOM_LEVEL);
                         tilesView.setZoomLevel(MIN_ZOOM_LEVEL + progress);
+                    }
                 }
 
                 @Override
                 public void onStartTrackingTouch(SeekBar seekBar) {
-
                 }
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-
                 }
             });
 
