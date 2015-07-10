@@ -521,7 +521,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 invalidate();
                 if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
-                } else if (animatedValue == newScale) {
+                } else if (animatedValue != newScale) {
                     onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
                     onScaleEnd(focusXOnScreen, focusYOnScreen, 0f);
                 }
