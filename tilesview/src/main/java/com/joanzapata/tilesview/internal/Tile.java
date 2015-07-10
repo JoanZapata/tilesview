@@ -4,12 +4,7 @@ import android.graphics.Bitmap;
 
 public class Tile {
 
-    public static final int STATE_RENDERING = 0;
-    public static final int STATE_RENDERED = 1;
-
     private Bitmap bitmap;
-
-    private int state;
 
     private final int xIndex, yIndex, zoomLevel;
 
@@ -55,14 +50,6 @@ public class Tile {
         return bitmap;
     }
 
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
-
     public Tile becomeMRU(Tile lastMRU) {
         if (newerTile != null)
             newerTile.olderTile = olderTile;
@@ -71,8 +58,7 @@ public class Tile {
         newerTile = null;
         if (lastMRU != this) {
             olderTile = lastMRU;
-            if (lastMRU != null)
-                lastMRU.newerTile = this;
+            lastMRU.newerTile = this;
         }
         return this;
     }
@@ -81,7 +67,6 @@ public class Tile {
         Tile newLRU = newerTile;
         newerTile.olderTile = null;
         newerTile = null;
-        olderTile = null;
         return newLRU;
     }
 

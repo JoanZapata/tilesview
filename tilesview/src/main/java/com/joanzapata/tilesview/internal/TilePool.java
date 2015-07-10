@@ -71,22 +71,30 @@ public class TilePool {
             if (tileLRU == null) {
                 tileLRU = tile;
                 tileMRU = tile;
-            } else if (nbTiles >= nbMaxTiles) {
+            } else if (nbTiles == nbMaxTiles) {
                 tileLRU.setDeleted(true);
                 existingBitmap = tileLRU.getBitmap();
-                tileLRU = tileLRU.removeAndGetNewLRU();
                 tilesByZoomLevel.get(tileLRU.getZoomLevel())[tileLRU.getxIndex()][tileLRU.getyIndex()] = null;
+                tileLRU = tileLRU.removeAndGetNewLRU();
                 nbTiles--;
             }
 
             nbTiles++;
 
-            tile.setState(Tile.STATE_RENDERING);
             tiles[xIndex][yIndex] = tile;
             executor.submit(new TileRenderingTask(tile,
                     xIndex, yIndex, zoomLevel,
                     contentWidth, contentHeight,
                     existingBitmap));
+
+        } else if (tile.isDeleted()) {
+            // Can happen from TileRenderingTask if evicted before ran
+
+            tile.setDeleted(false);
+            executor.submit(new TileRenderingTask(tile,
+                    xIndex, yIndex, zoomLevel,
+                    contentWidth, contentHeight,
+                    null));
 
         }
 
@@ -168,11 +176,13 @@ public class TilePool {
 
         final Tile tile;
         final int xIndex, yIndex, zoomLevel;
-        final float contentWidth;
-        final float contentHeight;
+        final float contentWidth, contentHeight;
         private final Bitmap existingBitmap;
 
-        public TileRenderingTask(Tile tile, int xIndex, int yIndex, int zoomLevel, float contentWidth, float contentHeight, Bitmap existingBitmap) {
+        public TileRenderingTask(Tile tile,
+                int xIndex, int yIndex, int zoomLevel,
+                float contentWidth, float contentHeight,
+                Bitmap existingBitmap) {
             this.tile = tile;
             this.xIndex = xIndex;
             this.yIndex = yIndex;
@@ -197,12 +207,13 @@ public class TilePool {
                     TILE_SIZE / zoom / contentWidth,
                     TILE_SIZE / zoom / contentHeight,
                     contentWidth, contentHeight);
-
             tile.setBitmap(bitmap);
-            tile.setState(Tile.STATE_RENDERED);
-            tilePoolListener.onTileRendered(tile);
 
-            if (tile.isDeleted()) {
+            // Can happen from getTile() on main thread.
+            if (!tile.isDeleted()) {
+                tilePoolListener.onTileRendered(tile);
+
+            } else {
                 bitmap.recycle();
             }
         }
@@ -211,7 +222,7 @@ public class TilePool {
         public void cancel() {
 
             // Remove the tile
-            tilesByZoomLevel.get(zoomLevel)[xIndex][yIndex] = null;
+            tile.setDeleted(true);
 
         }
     }
