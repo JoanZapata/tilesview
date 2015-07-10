@@ -26,11 +26,13 @@ import java.util.List;
 public class MainActivity extends Activity {
 
     private static final int MIN_ZOOM_LEVEL = 10;
-    private static final int MAX_ZOOM_LEVEL = 22;
+    private static final int MAX_ZOOM_LEVEL = 20;
 
     TilesView tilesView;
 
     SeekBar seekBar;
+
+    private boolean isTrackingTouchOnSeekBar = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +69,12 @@ public class MainActivity extends Activity {
             final BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(inputStream, false);
 
             final List<POI> pois = Arrays.asList(
-                    new POI("Tajmahal", this, R.drawable.tajmahal, 3918, 990, 5 / 7f),
-                    new POI("Big Ben", this, R.drawable.bigben, 2724.5f, 552f, 4 / 5f),
-                    new POI("Eiffel Tower", this, R.drawable.eiffel, 2756.5f, 598, 4 / 5f),
-                    new POI("Coliseum", this, R.drawable.colosseum, 2898.5f, 721.5f, 2 / 3f),
-                    new POI("Egypt", this, R.drawable.egypt, 3188, 935, 2 / 3f),
-                    new POI("Statue of Liberty", this, R.drawable.liberty, 1636, 742, 4 / 5f));
+                    new POI("Tajmahal", this, R.drawable.tajmahal, 7876f, 2400f, 5 / 7f),
+                    new POI("Big Ben", this, R.drawable.bigben, 5500f, 1531.5f, 4 / 5f),
+                    new POI("Eiffel Tower", this, R.drawable.eiffel, 5563.5f, 1623.5f, 4 / 5f),
+                    new POI("Coliseum", this, R.drawable.colosseum, 5849f, 1870f, 2 / 3f),
+                    new POI("Egypt", this, R.drawable.egypt, 6427.5f, 2296.5f, 2 / 3f),
+                    new POI("Statue of Liberty", this, R.drawable.liberty, 3318.5f, 1912f, 4 / 5f));
 
             final int sourceWidth = decoder.getWidth();
             final int sourceHeight = decoder.getHeight();
@@ -114,18 +116,17 @@ public class MainActivity extends Activity {
                                 POI poi = pois.get(i);
                                 if (poi.contains(x, y, scale)) {
                                     Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
-                                    animator.animateTo(poi.offsetX, poi.offsetY, 20);
+                                    animator.animateTo(poi.offsetX, poi.offsetY, 18);
                                     return;
                                 }
                             }
-
-                            animator.animateTo(x, y);
                         }
                     })
                     .setOnZoomLevelChangedListener(new OnZoomLevelChangedListener() {
                         @Override
                         public void onZoomLevelChanged(int zoomLevel) {
-                            seekBar.setProgress(zoomLevel - MIN_ZOOM_LEVEL);
+                            if (!isTrackingTouchOnSeekBar)
+                                seekBar.setProgress(zoomLevel - MIN_ZOOM_LEVEL);
                         }
                     });
 
@@ -133,17 +134,18 @@ public class MainActivity extends Activity {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (fromUser) {
-                        seekBar.setProgress(tilesView.getZoomLevel() - MIN_ZOOM_LEVEL);
                         tilesView.setZoomLevel(MIN_ZOOM_LEVEL + progress);
                     }
                 }
 
                 @Override
                 public void onStartTrackingTouch(SeekBar seekBar) {
+                    isTrackingTouchOnSeekBar = true;
                 }
 
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
+                    isTrackingTouchOnSeekBar = false;
                 }
             });
 
