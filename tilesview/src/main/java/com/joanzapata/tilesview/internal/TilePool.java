@@ -79,10 +79,6 @@ public class TilePool {
                 nbTiles--;
             }
 
-            if (tile == tileLRU) {
-                tileLRU = tile.getNewerTile();
-            }
-
             nbTiles++;
 
             tile.setState(Tile.STATE_RENDERING);
@@ -92,6 +88,10 @@ public class TilePool {
                     contentWidth, contentHeight,
                     existingBitmap));
 
+        }
+
+        if (tile == tileLRU && tile != tileMRU) {
+            tileLRU = tile.getNewerTile();
         }
 
         // Make this tile the most recently used one
