@@ -47,10 +47,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private int zoomLevel, zoomLevelWithUserBounds;
 
     /** Retains all tiles in memory */
-    private TilePool tilePool;
+    private final TilePool tilePool;
 
-    private Paint debugPaint;
-    private Paint backgroundPaint;
+    private final Paint debugPaint;
+    private final Paint backgroundPaint;
 
     private ScrollAndZoomDetector scrollAndZoomDetector;
 
@@ -86,6 +86,13 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         backgroundPaint.setColor(backgroundColor);
         backgroundPaint.setStyle(Paint.Style.FILL);
         setBackground(null);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (currentAnimator != null) currentAnimator.cancel();
+        tilePool.reset();
     }
 
     public TilesView addLayer(Layer layer) {

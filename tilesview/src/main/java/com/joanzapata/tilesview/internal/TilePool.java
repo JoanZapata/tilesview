@@ -150,6 +150,16 @@ public class TilePool {
         if (executor != null) executor.setCapacity(maxTasks);
     }
 
+    public void reset() {
+        tileRenderer = null;
+        executor.shutdownNow();
+        executor = null;
+        tilesByZoomLevel.clear();
+        maxTasks = 1;
+        nbMaxTiles = 100;
+        nbTiles = 0;
+    }
+
     public interface TilePoolListener {
         void onTileRendered(Tile tile);
     }
