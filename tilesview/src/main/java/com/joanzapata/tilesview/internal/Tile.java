@@ -50,16 +50,18 @@ public class Tile {
         return bitmap;
     }
 
-    public Tile becomeMRU(Tile lastMRU) {
-        if (newerTile != null)
-            newerTile.olderTile = olderTile;
-        if (olderTile != null)
-            olderTile.newerTile = newerTile;
-        newerTile = null;
-        if (lastMRU != this) {
+    public Tile becomeMRUIfNeeded(Tile lastMRU) {
+        if (this != lastMRU) {
+            if (newerTile != null)
+                newerTile.olderTile = olderTile;
+            if (olderTile != null)
+                olderTile.newerTile = newerTile;
+
+            newerTile = null;
             olderTile = lastMRU;
             lastMRU.newerTile = this;
         }
+
         return this;
     }
 
