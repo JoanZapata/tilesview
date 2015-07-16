@@ -91,6 +91,7 @@ public class TilePool {
             // Can happen from TileRenderingTask if evicted before ran
 
             tile.setDeleted(false);
+
             executor.submit(new TileRenderingTask(tile,
                     xIndex, yIndex, zoomLevel,
                     contentWidth, contentHeight,
@@ -103,7 +104,7 @@ public class TilePool {
         }
 
         // Make this tile the most recently used one
-        tileMRU = tile.becomeMRU(tileMRU);
+        tileMRU = tile.becomeMRUIfNeeded(tileMRU);
 
         // Return the bitmap of the created tile
         return tile.getBitmap();
@@ -223,7 +224,6 @@ public class TilePool {
 
             // Remove the tile
             tile.setDeleted(true);
-
         }
     }
 }
