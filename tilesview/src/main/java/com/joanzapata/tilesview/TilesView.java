@@ -490,10 +490,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 float yCurrentOffset = yCurrentOnContent * scale - getHeight() / 2f;
                 onScroll(xCurrentOffset - offsetX, yCurrentOffset - offsetY);
 
-                invalidate();
                 if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
-                } else if (animatedValue == 1f) {
+                } else if (animatedValue != 1f) {
                     float xFinalOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent);
                     float yFinalOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent);
                     onScale((scaleOrigin + scaleDistance) / scale, 0, 0);
@@ -501,6 +500,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     float yFinalOffset = yFinalOnContent * scale - getHeight() / 2f;
                     onScroll(xFinalOffset - offsetX, yFinalOffset - offsetY);
                 }
+
+                invalidate();
             }
         };
 
@@ -518,13 +519,13 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             public void run() {
                 Float animatedValue = (Float) currentAnimator.getAnimatedValue();
                 onScale(animatedValue / scale, focusXOnScreen, focusYOnScreen);
-                invalidate();
                 if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
                 } else if (animatedValue != newScale) {
                     onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
                     onScaleEnd(focusXOnScreen, focusYOnScreen, 0f);
                 }
+                invalidate();
             }
         };
 
