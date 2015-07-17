@@ -412,12 +412,26 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetX += distanceX;
         offsetY += distanceY;
 
-        float minOffsetX = -getPaddingLeft();
-        float minOffsetY = -getPaddingTop();
+        float minOffsetX;
+        float minOffsetY;
+        float maxOffsetX;
+        float maxOffsetY;
+
         float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
         float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
-        float maxOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
-        float maxOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
+
+        if (scale >= 1) {
+            minOffsetX = -getPaddingLeft();
+            minOffsetY = -getPaddingTop();
+            maxOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
+            maxOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
+        } else {
+            minOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
+            minOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
+            maxOffsetX = -getPaddingLeft();
+            maxOffsetY = -getPaddingTop();
+        }
+
         offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
         offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
 
