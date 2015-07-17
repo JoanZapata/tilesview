@@ -164,6 +164,13 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
         float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
 
+        canvas.drawRect(0, 0, getPaddingLeft(), getHeight() - getPaddingBottom(), backgroundPaint);
+        canvas.drawRect(getPaddingLeft(), 0, getWidth(), getPaddingTop(), backgroundPaint);
+        canvas.drawRect(getWidth() - getPaddingRight(), getPaddingTop(), getWidth(), getHeight(), backgroundPaint);
+        canvas.drawRect(0, getHeight() - getPaddingBottom(), getWidth() - getPaddingRight(), getHeight(), backgroundPaint);
+
+        canvas.clipRect(getPaddingLeft(), getPaddingTop(), getWidth() - getPaddingRight(), getHeight() - getPaddingBottom());
+
         canvas.save();
         canvas.translate((int) -offsetX, (int) -offsetY);
 
