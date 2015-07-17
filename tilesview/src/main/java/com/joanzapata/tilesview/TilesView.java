@@ -37,6 +37,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
      */
     private int userMinZoomLevel = 5, userMaxZoomLevel = (int) Math.pow(2, 8);
 
+    /**
+     * Add padding to the content.
+     */
+    private int contentPaddingLeft, contentPaddingTop, contentPaddingRight, contentPaddingBottom;
+
     /** X and Y offset of the top left corner of the screen in the global image */
     private float offsetX, offsetY;
 
@@ -70,10 +75,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         if (getBackground() instanceof ColorDrawable)
             backgroundColor = ((ColorDrawable) getBackground()).getColor();
         this.tilePool = new TilePool(backgroundColor, this);
+        this.contentPaddingLeft = 0;
+        this.contentPaddingTop = 0;
+        this.contentPaddingRight = 0;
+        this.contentPaddingBottom = 0;
         this.scale = 1f;
         this.zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
-        this.offsetX = -getPaddingLeft();
-        this.offsetY = -getPaddingTop();
+        this.offsetX = -getPaddingLeft() - getContentPaddingLeft();
+        this.offsetY = -getPaddingTop() - getContentPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
 
         debugPaint = new Paint();
@@ -138,6 +147,16 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return this;
     }
 
+    public TilesView setContentPadding(int left, int top, int right, int bottom) {
+        this.contentPaddingLeft = left;
+        this.contentPaddingTop = top;
+        this.contentPaddingRight = right;
+        this.contentPaddingBottom = bottom;
+        this.offsetX = -getPaddingLeft() - getContentPaddingLeft();
+        this.offsetY = -getPaddingTop() - getContentPaddingTop();
+        return this;
+    }
+
     public int getMinZoomLevel() {
         int minZoomLevel = this.userMinZoomLevel;
         if (minZoomLevel > 10)
@@ -159,10 +178,26 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return zoomLevel;
     }
 
+    public int getContentPaddingLeft() {
+        return contentPaddingLeft;
+    }
+
+    public int getContentPaddingTop() {
+        return contentPaddingTop;
+    }
+
+    public int getContentPaddingRight() {
+        return contentPaddingRight;
+    }
+
+    public int getContentPaddingBottom() {
+        return contentPaddingBottom;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
-        float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
-        float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+        float contentWidth = getContentWidth();
+        float contentHeight = getContentHeight();
 
         canvas.drawRect(0, 0, getPaddingLeft(), getHeight() - getPaddingBottom(), backgroundPaint);
         canvas.drawRect(getPaddingLeft(), 0, getWidth(), getPaddingTop(), backgroundPaint);
@@ -424,19 +459,19 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         float maxOffsetX;
         float maxOffsetY;
 
-        float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
-        float contentHeight = getHeight() - getPaddingTop() - getPaddingBottom();
+        float contentWidth = getContentWidth();
+        float contentHeight = getContentHeight();
 
         if (scale >= 1) {
-            minOffsetX = -getPaddingLeft();
-            minOffsetY = -getPaddingTop();
-            maxOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
-            maxOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
+            minOffsetX = -getPaddingLeft() - getContentPaddingLeft();
+            minOffsetY = -getPaddingTop() - getContentPaddingTop();
+            maxOffsetX = contentWidth * scale + getPaddingRight() + getContentPaddingRight() - getWidth();
+            maxOffsetY = contentHeight * scale + getPaddingBottom() + getContentPaddingBottom() - getHeight();
         } else {
-            minOffsetX = contentWidth * scale + getPaddingRight() - getWidth();
-            minOffsetY = contentHeight * scale + getPaddingBottom() - getHeight();
-            maxOffsetX = -getPaddingLeft();
-            maxOffsetY = -getPaddingTop();
+            minOffsetX = contentWidth * scale + getPaddingRight() + getContentPaddingRight() - getWidth();
+            minOffsetY = contentHeight * scale + getPaddingBottom() + getContentPaddingBottom() - getHeight();
+            maxOffsetX = -getPaddingLeft() - getContentPaddingLeft();
+            maxOffsetY = -getPaddingTop() - getContentPaddingTop();
         }
 
         offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
@@ -565,8 +600,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     public void onSingleTap(float screenX, float screenY) {
         if (onContentTappedListener != null) {
-            float contentWidth = getWidth() - getPaddingLeft() - getPaddingRight();
-            float contentHeight = getHeight() - getPaddingLeft() - getPaddingRight();
+            float contentWidth = getContentWidth();
+            float contentHeight = getContentHeight();
             float contentX = (screenX + offsetX) / scale;
             float contentY = (screenY + offsetY) / scale;
             onContentTappedListener.onContentTapped(
@@ -609,11 +644,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     public float getContentWidth() {
-        return getWidth() - getPaddingLeft() - getPaddingRight();
+        return getWidth() - getPaddingLeft() - getPaddingRight() - getContentPaddingLeft() - getContentPaddingRight();
     }
 
     public float getContentHeight() {
-        return getHeight() - getPaddingTop() - getPaddingBottom();
+        return getHeight() - getPaddingTop() - getPaddingBottom() - getContentPaddingTop() - getContentPaddingBottom();
     }
 
 }

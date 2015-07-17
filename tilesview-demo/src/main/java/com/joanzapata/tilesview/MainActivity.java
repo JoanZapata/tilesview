@@ -46,6 +46,8 @@ public class MainActivity extends Activity {
             }
         };
 
+        int contentPadding = getResources().getDimensionPixelSize(R.dimen.content_padding);
+
         new DebugDrawer()
                 .elements("UI",
                         new AnimationSpeedElement(),
@@ -83,6 +85,7 @@ public class MainActivity extends Activity {
             tilesView.setDebug(toggleElement.isChecked())
                     .setMinZoomLevel(MIN_ZOOM_LEVEL)
                     .setMaxZoomLevel(MAX_ZOOM_LEVEL)
+                    .setContentPadding(contentPadding, contentPadding, contentPadding, contentPadding)
                     .setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
                         @Override
                         public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
