@@ -1,5 +1,7 @@
 package com.joanzapata.tilesview;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.*;
@@ -475,7 +477,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return true;
     }
 
-    public void animateTo(final float x, final float y, int zoomLevel) {
+    public void animateTo(final float x, final float y, int zoomLevel, final CancelableCallback callback) {
         if (currentAnimator != null) currentAnimator.cancel();
 
         if (zoomLevel > 10)
@@ -484,6 +486,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         currentAnimator = ValueAnimator.ofFloat(0f, 1f);
         currentAnimator.setDuration(ANIMATE_TO_DURATION);
         currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
+        currentAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                if (callback != null) {
+                    callback.onCancel();
+                }
+            }
+        });
         currentAnimator.start();
         final float xScreenCenterOnContent = (offsetX + getWidth() / 2f) / scale;
         final float yScreenCenterOnContent = (offsetY + getHeight() / 2f) / scale;
@@ -506,13 +516,19 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
                 if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
-                } else if (animatedValue != 1f) {
-                    float xFinalOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent);
-                    float yFinalOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent);
-                    onScale((scaleOrigin + scaleDistance) / scale, 0, 0);
-                    float xFinalOffset = xFinalOnContent * scale - getWidth() / 2f;
-                    float yFinalOffset = yFinalOnContent * scale - getHeight() / 2f;
-                    onScroll(xFinalOffset - offsetX, yFinalOffset - offsetY);
+                } else {
+                    if (animatedValue != 1f) {
+                        float xFinalOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent);
+                        float yFinalOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent);
+                        onScale((scaleOrigin + scaleDistance) / scale, 0, 0);
+                        float xFinalOffset = xFinalOnContent * scale - getWidth() / 2f;
+                        float yFinalOffset = yFinalOnContent * scale - getHeight() / 2f;
+                        onScroll(xFinalOffset - offsetX, yFinalOffset - offsetY);
+                    }
+
+                    if (callback != null) {
+                        callback.onFinish();
+                    }
                 }
 
                 invalidate();
