@@ -24,11 +24,15 @@ public class LIFOExecutor {
             public boolean offer(Runnable runnable) {
                 while (size() >= capacity) {
                     Runnable futureTask = pollLast();
-                    Cancellable cancellable = cancellables.remove(futureTask);
-                    if (cancellable != null) {
-                        cancellable.cancel();
-                    } else {
-                        submit(futureTask);
+
+                    // Other threads may have handled all remaining tasks so the queue is empty
+                    if (futureTask != null) {
+                        Cancellable cancellable = cancellables.remove(futureTask);
+                        if (cancellable != null) {
+                            cancellable.cancel();
+                        } else {
+                            submit(futureTask);
+                        }
                     }
                 }
                 return offerFirst(runnable);
