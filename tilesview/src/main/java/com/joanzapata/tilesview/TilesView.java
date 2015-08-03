@@ -581,8 +581,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 onScale(animatedValue / scale, focusXOnScreen, focusYOnScreen);
                 if (currentAnimator.isRunning()) {
                     postOnAnimation(this);
-                } else if (animatedValue != newScale) {
-                    onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
+                } else {
+                    if (animatedValue != newScale) {
+                        onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
+                    }
+
                     onScaleEnd(focusXOnScreen, focusYOnScreen, 0f);
                 }
                 invalidate();
@@ -654,5 +657,4 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public float getContentHeight() {
         return getHeight() - getPaddingTop() - getPaddingBottom() - getContentPaddingTop() - getContentPaddingBottom();
     }
-
 }
