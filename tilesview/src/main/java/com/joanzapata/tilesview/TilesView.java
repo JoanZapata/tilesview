@@ -80,6 +80,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         this.contentPaddingRight = 0;
         this.contentPaddingBottom = 0;
         this.scale = 1f;
+        this.zoomLevelWithUserBounds = 10;
         this.zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
         this.offsetX = -getPaddingLeft() - getContentPaddingLeft();
         this.offsetY = -getPaddingTop() - getContentPaddingTop();
@@ -500,9 +501,12 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         scale = newScale;
         int newZoomLevelWithoutBounds = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
         int newZoomLevelWithUserBounds = Math.max(Math.min(newZoomLevelWithoutBounds, userMaxZoomLevel), userMinZoomLevel);
-        if (onZoomLevelChangedListener != null && zoomLevelWithUserBounds != newZoomLevelWithUserBounds) {
+        if (zoomLevelWithUserBounds != newZoomLevelWithUserBounds) {
             zoomLevelWithUserBounds = newZoomLevelWithUserBounds;
-            onZoomLevelChangedListener.onZoomLevelChanged(getZoomLevel());
+
+            if (onZoomLevelChangedListener != null) {
+                onZoomLevelChangedListener.onZoomLevelChanged(getZoomLevel());
+            }
         }
 
         onScroll(contentFocusXAfter - contentFocusXBefore, contentFocusYAfter - contentFocusYBefore);
