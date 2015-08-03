@@ -63,7 +63,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
-    private List<Layer> layers = new ArrayList<Layer>();
+    private List<Layer> layers;
     private boolean debug = false;
     private ValueAnimator currentAnimator;
     private OnZoomLevelChangedListener onZoomLevelChangedListener;
@@ -75,16 +75,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         if (getBackground() instanceof ColorDrawable)
             backgroundColor = ((ColorDrawable) getBackground()).getColor();
         this.tilePool = new TilePool(backgroundColor, this);
+        this.layers = new ArrayList<Layer>();
         this.contentPaddingLeft = 0;
         this.contentPaddingTop = 0;
         this.contentPaddingRight = 0;
         this.contentPaddingBottom = 0;
-        this.scale = 1f;
-        this.zoomLevelWithUserBounds = 10;
-        this.zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
-        this.offsetX = -getPaddingLeft() - getContentPaddingLeft();
-        this.offsetY = -getPaddingTop() - getContentPaddingTop();
         this.scrollAndZoomDetector = new ScrollAndZoomDetector(context, this, this);
+
+        clear();
 
         debugPaint = new Paint();
         debugPaint.setAntiAlias(true);
@@ -101,8 +99,20 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        clear();
+    }
+
+    public TilesView clear() {
         if (currentAnimator != null) currentAnimator.cancel();
-        tilePool.reset();
+        layers.clear();
+        tilePool.setTileRenderer(null, true);
+        scale = 1f;
+        zoomLevelWithUserBounds = 10;
+        zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
+        offsetX = -getPaddingLeft() - getContentPaddingLeft();
+        offsetY = -getPaddingTop() - getContentPaddingTop();
+        postInvalidate();
+        return this;
     }
 
     public TilesView addLayer(Layer layer) {

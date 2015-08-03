@@ -37,6 +37,7 @@ public class TilePool {
     public TilePool(int tilesBackgroundColor, TilePoolListener tilePoolListener) {
         this.tilePoolListener = tilePoolListener;
         this.tilesBackgroundColor = tilesBackgroundColor;
+        this.tilesByZoomLevel = new SparseArray<Tile[][]>();
         this.maxTasks = 1;
         this.nbMaxTiles = 100;
         this.nbTiles = 0;
@@ -139,18 +140,14 @@ public class TilePool {
     }
 
     public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+        clear();
 
-        // Stop existing executor service
-        if (executor != null)
-            executor.shutdownNow();
-
-        // Reset all tiles
-        this.tilesByZoomLevel = new SparseArray<Tile[][]>();
-
-        int nbCores = Runtime.getRuntime().availableProcessors();
-        executor = new LIFOExecutor(threadSafe ? nbCores : 1);
-        executor.setCapacity(maxTasks);
-        this.tileRenderer = tileRenderer;
+        if (tileRenderer != null) {
+            int nbCores = Runtime.getRuntime().availableProcessors();
+            executor = new LIFOExecutor(threadSafe ? nbCores : 1);
+            executor.setCapacity(maxTasks);
+            this.tileRenderer = tileRenderer;
+        }
     }
 
     public void setMaxTasks(int maxTasks) {
@@ -159,14 +156,25 @@ public class TilePool {
         if (executor != null) executor.setCapacity(maxTasks);
     }
 
-    public void reset() {
+    public void clear() {
         tileRenderer = null;
-        executor.shutdownNow();
-        executor = null;
+
+        // Stop existing executor service
+        if (executor != null) {
+            executor.shutdownNow();
+            executor = null;
+        }
+
+        // Reset all tiles
         tilesByZoomLevel.clear();
-        maxTasks = 1;
-        nbMaxTiles = 100;
         nbTiles = 0;
+        tileLRU = null;
+        tileMRU = null;
+
+        if (placeholder != null) {
+            placeholder.recycle();
+            placeholder = null;
+        }
     }
 
     public interface TilePoolListener {
