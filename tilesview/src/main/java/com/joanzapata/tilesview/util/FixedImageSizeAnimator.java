@@ -1,5 +1,6 @@
 package com.joanzapata.tilesview.util;
 
+import com.joanzapata.tilesview.CancelableCallback;
 import com.joanzapata.tilesview.TilesView;
 
 public class FixedImageSizeAnimator {
@@ -14,11 +15,11 @@ public class FixedImageSizeAnimator {
         this.sourceHeight = sourceHeight;
     }
 
-    public void animateTo(float x, float y) {
-        animateTo(x, y, tilesView.getZoomLevel());
+    public void animateTo(float x, float y, CancelableCallback callback) {
+        animateTo(x, y, tilesView.getZoomLevel(), callback);
     }
 
-    public void animateTo(float x, float y, int zoomLevel) {
+    public void animateTo(float x, float y, int zoomLevel, CancelableCallback callback) {
         float contentWidth = tilesView.getContentWidth();
         float contentHeight = tilesView.getContentHeight();
         float xDiff, yDiff, factor;
@@ -34,6 +35,6 @@ public class FixedImageSizeAnimator {
             yDiff = 0f;
         }
 
-        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor, zoomLevel);
+        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor, zoomLevel, callback);
     }
 }
