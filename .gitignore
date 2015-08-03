@@ -1,7 +1,6 @@
 .gradle
 local.properties
 .idea/*
-!.idea/codeStyleSettings.xml
 .DS_Store
 build
 *.iml
