@@ -15,8 +15,16 @@ public class FixedImageSizeAnimator {
         this.sourceHeight = sourceHeight;
     }
 
+    public void animateTo(float x, float y) {
+        animateTo(x, y, tilesView.getZoomLevel(), null);
+    }
+
     public void animateTo(float x, float y, CancelableCallback callback) {
         animateTo(x, y, tilesView.getZoomLevel(), callback);
+    }
+
+    public void animateTo(float x, float y, int zoomLevel) {
+        animateTo(x, y, zoomLevel, null);
     }
 
     public void animateTo(float x, float y, int zoomLevel, CancelableCallback callback) {

@@ -533,6 +533,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return true;
     }
 
+    public void animateTo(float x, float y, int zoomLevel) {
+        animateTo(x, y, zoomLevel, null);
+    }
+
     public void animateTo(final float x, final float y, int zoomLevel, final CancelableCallback callback) {
         if (currentAnimator != null) currentAnimator.cancel();
 
