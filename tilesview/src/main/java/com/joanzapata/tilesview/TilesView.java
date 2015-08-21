@@ -119,6 +119,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public TilesView addLayer(Layer layer) {
         layers.add(layer);
+        postInvalidate();
         return this;
     }
 
