@@ -63,7 +63,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private OnContentTappedListener onContentTappedListener;
 
-    private OnMapLoadedCallback onMapLoadedCallback;
+    private OnViewLoadedCallback onViewLoadedCallback;
 
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
@@ -72,7 +72,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private ValueAnimator currentAnimator;
     private OnZoomLevelChangedListener onZoomLevelChangedListener;
 
-    private boolean mapAlreadyLoaded = false;
+    private boolean viewAlreadyLoaded = false;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -164,11 +164,17 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return this;
     }
 
-    public TilesView setOnMapLoadedCallback(OnMapLoadedCallback onMapLoadedCallback) {
-        if (mapAlreadyLoaded) {
-            onMapLoadedCallback.onMapLoaded();
+    /**
+     * Sets a callback that is invoked when this view has finished rendering. The callback will only be invoked once. If
+     * this method is called when the view is fully rendered, the callback will be invoked immediately. This event will
+     * not fire if the view is continuously changing and never completes loading due to the user constantly interacting
+     * with the view.
+     */
+    public TilesView setOnViewLoadedCallback(OnViewLoadedCallback onViewLoadedCallback) {
+        if (viewAlreadyLoaded) {
+            onViewLoadedCallback.onViewLoaded();
         } else {
-            this.onMapLoadedCallback = onMapLoadedCallback;
+            this.onViewLoadedCallback = onViewLoadedCallback;
         }
         return this;
     }
@@ -222,7 +228,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     protected void onDraw(Canvas canvas) {
-        boolean mapLoaded = true;
+        boolean viewLoaded = true;
         float contentWidth = getContentWidth();
         float contentHeight = getContentHeight();
 
@@ -275,7 +281,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -290,7 +296,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -305,7 +311,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -320,7 +326,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -345,10 +351,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         canvas.restore();
 
-        if (mapLoaded && onMapLoadedCallback != null) {
-            onMapLoadedCallback.onMapLoaded();
-            onMapLoadedCallback = null;
-            mapAlreadyLoaded = true;
+        if (viewLoaded && onViewLoadedCallback != null) {
+            onViewLoadedCallback.onViewLoaded();
+            onViewLoadedCallback = null;
+            viewAlreadyLoaded = true;
         }
     }
 
@@ -457,7 +463,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     public TilesView setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
-        mapAlreadyLoaded = false;
+        viewAlreadyLoaded = false;
         tilePool.setTileRenderer(tileRenderer, threadSafe);
         postInvalidate();
         return this;

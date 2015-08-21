@@ -86,9 +86,9 @@ public class MainActivity extends Activity {
                     .setMinZoomLevel(MIN_ZOOM_LEVEL)
                     .setMaxZoomLevel(MAX_ZOOM_LEVEL)
                     .setContentPadding(contentPadding, contentPadding, contentPadding, contentPadding)
-                    .setOnMapLoadedCallback(new OnMapLoadedCallback() {
+                    .setOnViewLoadedCallback(new OnViewLoadedCallback() {
                         @Override
-                        public void onMapLoaded() {
+                        public void onViewLoaded() {
                             tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
                                 @Override
                                 public void renderLayer(Canvas canvas) {
