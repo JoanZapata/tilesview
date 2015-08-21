@@ -63,12 +63,16 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private OnContentTappedListener onContentTappedListener;
 
+    private OnViewLoadedCallback onViewLoadedCallback;
+
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
     private List<Layer> layers;
     private boolean debug = false;
     private ValueAnimator currentAnimator;
     private OnZoomLevelChangedListener onZoomLevelChangedListener;
+
+    private boolean viewAlreadyLoaded = false;
 
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -161,6 +165,21 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return this;
     }
 
+    /**
+     * Sets a callback that is invoked when this view has finished rendering. The callback will only be invoked once. If
+     * this method is called when the view is fully rendered, the callback will be invoked immediately. This event will
+     * not fire if the view is continuously changing and never completes loading due to the user constantly interacting
+     * with the view.
+     */
+    public TilesView setOnViewLoadedCallback(OnViewLoadedCallback onViewLoadedCallback) {
+        if (viewAlreadyLoaded) {
+            onViewLoadedCallback.onViewLoaded();
+        } else {
+            this.onViewLoadedCallback = onViewLoadedCallback;
+        }
+        return this;
+    }
+
     public TilesView setContentPadding(int left, int top, int right, int bottom) {
         this.contentPaddingLeft = left;
         this.contentPaddingTop = top;
@@ -210,6 +229,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     protected void onDraw(Canvas canvas) {
+        boolean viewLoaded = true;
         float contentWidth = getContentWidth();
         float contentHeight = getContentHeight();
 
@@ -262,7 +282,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -277,7 +297,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -292,7 +312,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -307,7 +327,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                viewLoaded = viewLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -332,15 +352,22 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         canvas.restore();
 
+        if (viewLoaded && onViewLoadedCallback != null) {
+            onViewLoadedCallback.onViewLoaded();
+            onViewLoadedCallback = null;
+            viewAlreadyLoaded = true;
+        }
     }
 
-    private void drawTile(
+    private boolean drawTile(
             int xIndex, int yIndex,
             Canvas canvas, Bitmap placeholder,
             float zoomDiff, float placeholderRatio,
             int xGridIndexStart, int xGridIndexStop,
             int yGridIndexStart, int yGridIndexStop,
             float contentWidth, float contentHeight) {
+
+        boolean tileLoaded;
 
         // Compute the current tile position on canvas
         float spread = zoomDiff != 1f ? +1f : 0f;
@@ -360,7 +387,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 // Draw the tile if any
                 reusableRectF.set(left, top, right, bottom);
                 canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
-
+                tileLoaded = true;
             } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
                 // Draw the placeholder if any
                 reusableRectF.set(left, top, right, bottom);
@@ -394,10 +421,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 }
 
                 canvas.drawBitmap(placeholder, reusableRect, reusableRectF, null);
-
+                tileLoaded = false;
             } else {
                 // Draw the background otherwise
                 canvas.drawRect(left, top, right, bottom, backgroundPaint);
+                tileLoaded = false;
             }
 
             if (debug) {
@@ -424,8 +452,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             // If the current tile is outside user content, draw placeholder
             canvas.drawRect(left, top, right, bottom, backgroundPaint);
+            tileLoaded = true;
 
         }
+
+        return tileLoaded;
     }
 
     public TilesView setTileRenderer(TileRenderer tileRenderer) {
@@ -433,6 +464,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     public TilesView setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+        viewAlreadyLoaded = false;
         tilePool.setTileRenderer(tileRenderer, threadSafe);
         postInvalidate();
         return this;

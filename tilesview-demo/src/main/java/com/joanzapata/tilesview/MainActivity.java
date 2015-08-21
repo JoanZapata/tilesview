@@ -86,6 +86,35 @@ public class MainActivity extends Activity {
                     .setMinZoomLevel(MIN_ZOOM_LEVEL)
                     .setMaxZoomLevel(MAX_ZOOM_LEVEL)
                     .setContentPadding(contentPadding, contentPadding, contentPadding, contentPadding)
+                    .setOnViewLoadedCallback(new OnViewLoadedCallback() {
+                        @Override
+                        public void onViewLoaded() {
+                            tilesView.addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
+                                @Override
+                                public void renderLayer(Canvas canvas) {
+                                    for (int i = 0; i < pois.size(); i++) {
+                                        POI poi = pois.get(i);
+                                        canvas.drawBitmap(poi.bitmap,
+                                                scaled(poi.offsetX) + poi.deltaX,
+                                                scaled(poi.offsetY) + poi.deltaY,
+                                                null);
+                                    }
+                                }
+                            }).setOnContentTappedListener(new FixedImageSizeTappedListener(sourceWidth, sourceHeight) {
+                                @Override
+                                protected void contentTapped(float x, float y, float scale) {
+                                    for (int i = pois.size() - 1; i >= 0; i--) {
+                                        POI poi = pois.get(i);
+                                        if (poi.contains(x, y, scale)) {
+                                            Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
+                                            animator.animateTo(poi.offsetX, poi.offsetY, 18);
+                                            return;
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    })
                     .setTileRenderer(new FixedImageSizeTileRenderer(sourceWidth, sourceHeight) {
                         @Override
                         public void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
@@ -98,31 +127,6 @@ public class MainActivity extends Activity {
                             Bitmap tmpBitmap = decoder.decodeRegion(sourceRect, options);
                             canvas.drawBitmap(tmpBitmap, null, destRect, null);
                             tmpBitmap.recycle();
-                        }
-                    })
-                    .addLayer(new LayerOnFixedImageSize(sourceWidth, sourceHeight) {
-                        @Override
-                        public void renderLayer(Canvas canvas) {
-                            for (int i = 0; i < pois.size(); i++) {
-                                POI poi = pois.get(i);
-                                canvas.drawBitmap(poi.bitmap,
-                                        scaled(poi.offsetX) + poi.deltaX,
-                                        scaled(poi.offsetY) + poi.deltaY,
-                                        null);
-                            }
-                        }
-                    })
-                    .setOnContentTappedListener(new FixedImageSizeTappedListener(sourceWidth, sourceHeight) {
-                        @Override
-                        protected void contentTapped(float x, float y, float scale) {
-                            for (int i = pois.size() - 1; i >= 0; i--) {
-                                POI poi = pois.get(i);
-                                if (poi.contains(x, y, scale)) {
-                                    Snackbar.make(tilesView, "Tapped " + poi.name, Snackbar.LENGTH_LONG).show();
-                                    animator.animateTo(poi.offsetX, poi.offsetY, 18);
-                                    return;
-                                }
-                            }
                         }
                     })
                     .setOnZoomLevelChangedListener(new OnZoomLevelChangedListener() {
