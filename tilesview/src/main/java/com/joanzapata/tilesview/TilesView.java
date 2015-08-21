@@ -72,6 +72,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private ValueAnimator currentAnimator;
     private OnZoomLevelChangedListener onZoomLevelChangedListener;
 
+    private boolean mapAlreadyLoaded = false;
+
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -163,7 +165,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     public TilesView setOnMapLoadedCallback(OnMapLoadedCallback onMapLoadedCallback) {
-        this.onMapLoadedCallback = onMapLoadedCallback;
+        if (mapAlreadyLoaded) {
+            onMapLoadedCallback.onMapLoaded();
+        } else {
+            this.onMapLoadedCallback = onMapLoadedCallback;
+        }
         return this;
     }
 
@@ -342,6 +348,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         if (mapLoaded && onMapLoadedCallback != null) {
             onMapLoadedCallback.onMapLoaded();
             onMapLoadedCallback = null;
+            mapAlreadyLoaded = true;
         }
     }
 
