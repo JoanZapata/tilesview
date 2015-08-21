@@ -457,6 +457,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     public TilesView setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+        mapAlreadyLoaded = false;
         tilePool.setTileRenderer(tileRenderer, threadSafe);
         postInvalidate();
         return this;
