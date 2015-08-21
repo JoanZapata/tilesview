@@ -63,6 +63,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private OnContentTappedListener onContentTappedListener;
 
+    private OnMapLoadedCallback onMapLoadedCallback;
+
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
     private List<Layer> layers;
@@ -160,6 +162,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return this;
     }
 
+    public TilesView setOnMapLoadedCallback(OnMapLoadedCallback onMapLoadedCallback) {
+        this.onMapLoadedCallback = onMapLoadedCallback;
+        return this;
+    }
+
     public TilesView setContentPadding(int left, int top, int right, int bottom) {
         this.contentPaddingLeft = left;
         this.contentPaddingTop = top;
@@ -209,6 +216,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     protected void onDraw(Canvas canvas) {
+        boolean mapLoaded = true;
         float contentWidth = getContentWidth();
         float contentHeight = getContentHeight();
 
@@ -261,7 +269,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -276,7 +284,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -291,7 +299,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (xIndex <= xIndexStop && xIndex >= xIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -306,7 +314,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             while (yIndex <= yIndexStop && yIndex >= yIndexStart) {
 
-                drawTile(xIndex, yIndex, canvas,
+                mapLoaded = mapLoaded & drawTile(xIndex, yIndex, canvas,
                         placeholder, zoomDiff, placeholderRatio,
                         xGridIndexStart, xGridIndexStop,
                         yGridIndexStart, yGridIndexStop,
@@ -331,15 +339,21 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         canvas.restore();
 
+        if (mapLoaded && onMapLoadedCallback != null) {
+            onMapLoadedCallback.onMapLoaded();
+            onMapLoadedCallback = null;
+        }
     }
 
-    private void drawTile(
+    private boolean drawTile(
             int xIndex, int yIndex,
             Canvas canvas, Bitmap placeholder,
             float zoomDiff, float placeholderRatio,
             int xGridIndexStart, int xGridIndexStop,
             int yGridIndexStart, int yGridIndexStop,
             float contentWidth, float contentHeight) {
+
+        boolean tileLoaded;
 
         // Compute the current tile position on canvas
         float spread = zoomDiff != 1f ? +1f : 0f;
@@ -359,7 +373,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 // Draw the tile if any
                 reusableRectF.set(left, top, right, bottom);
                 canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
-
+                tileLoaded = true;
             } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
                 // Draw the placeholder if any
                 reusableRectF.set(left, top, right, bottom);
@@ -393,10 +407,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 }
 
                 canvas.drawBitmap(placeholder, reusableRect, reusableRectF, null);
-
+                tileLoaded = false;
             } else {
                 // Draw the background otherwise
                 canvas.drawRect(left, top, right, bottom, backgroundPaint);
+                tileLoaded = false;
             }
 
             if (debug) {
@@ -423,8 +438,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
             // If the current tile is outside user content, draw placeholder
             canvas.drawRect(left, top, right, bottom, backgroundPaint);
+            tileLoaded = true;
 
         }
+
+        return tileLoaded;
     }
 
     public TilesView setTileRenderer(TileRenderer tileRenderer) {
