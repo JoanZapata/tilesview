@@ -117,6 +117,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
         offsetX = -getPaddingLeft() - getContentPaddingLeft();
         offsetY = -getPaddingTop() - getContentPaddingTop();
+        viewAlreadyLoaded = false;
+        onViewLoadedCallback = null;
         postInvalidate();
         return this;
     }
