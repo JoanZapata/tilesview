@@ -1,24 +1,22 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:gravity="center"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
-    <com.joanzapata.tilesview.TilesView
-        android:id="@+id/tilesView"
-        android:padding="40dp"
-        android:background="#fefefe"
-        android:layout_above="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-    <SeekBar
-        android:id="@+id/seekBar"
-        android:layout_alignParentBottom="true"
-        android:background="#000000"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
-        android:paddingLeft="50dp"
-        android:paddingRight="50dp"
-        android:layout_width="match_parent"
+    <Button
+        android:id="@+id/veryBasic"
+        android:text="Example of DefaultAdapter"
+        android:textAllCaps="false"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-</RelativeLayout>
+    <Button
+        android:id="@+id/mapWithLayer"
+        android:text="Example of FixedSizeAdapter"
+        android:textAllCaps="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

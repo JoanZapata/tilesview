@@ -1,32 +1,75 @@
-package com.joanzapata.tilesview.util;
+package com.joanzapata.tilesview.adapter;
 
 import android.graphics.Canvas;
+import android.graphics.PointF;
 import android.graphics.RectF;
-import com.joanzapata.tilesview.TileRenderer;
+import com.joanzapata.tilesview.CancelableCallback;
+import com.joanzapata.tilesview.TilesView;
+import com.joanzapata.tilesview.TilesViewAdapter;
 
-public abstract class FixedImageSizeTileRenderer implements TileRenderer {
-
-    private final float sourceWidth, sourceHeight;
+public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     private final ThreadLocal<RectF> sourceRectTL, destRectTL;
+    private final float sourceWidth;
+    private final float sourceHeight;
 
-    public FixedImageSizeTileRenderer(float sourceWidth, float sourceHeight) {
-        this.sourceWidth = sourceWidth;
-        this.sourceHeight = sourceHeight;
-        this.sourceRectTL = new ThreadLocal<RectF>();
-        this.destRectTL = new ThreadLocal<RectF>();
+    public FixedSizeAdapter(float width, float height) {
+        this.sourceWidth = width;
+        this.sourceHeight = height;
+        sourceRectTL = new ThreadLocal<RectF>();
+        destRectTL = new ThreadLocal<RectF>();
     }
 
     @Override
-    public final void renderTile(Canvas canvas,
+    public void attachTilesView(TilesView tilesView) {
+
+    }
+
+    @Override
+    public int getMinZoomLevel() {
+        return 0;
+    }
+
+    @Override
+    public int getMaxZoomLevel() {
+        return 0;
+    }
+
+    @Override
+    public int getOverscrollLeft() {
+        return 0;
+    }
+
+    @Override
+    public int getOverscrollRight() {
+        return 0;
+    }
+
+    @Override
+    public int getOverscrollTop() {
+        return 0;
+    }
+
+    @Override
+    public int getOverscrollBottom() {
+        return 0;
+    }
+
+    @Override
+    public boolean isThreadSafe() {
+        return false;
+    }
+
+    @Override
+    public void drawTile(Canvas canvas,
             float xRatio, float yRatio,
             float widthRatio, float heightRatio,
-            float contentInitialWidth, float contentInitialHeight) {
+            float contentInitialWidth, float contentInitialHeight,
+            float scale) {
 
         float xDiff, yDiff;
         float xFactor, yFactor;
         float initialScale;
-        float scale = canvas.getWidth() / (widthRatio * contentInitialWidth);
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -39,7 +82,7 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
             destRectTL.set(destRect);
         }
 
-        // Try using source width as reference
+        // Try using source sourceWidth as reference
         float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
         if (scaledSourceHeight <= contentInitialHeight) {
             initialScale = contentInitialWidth / sourceWidth;
@@ -56,7 +99,7 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
             yFactor = 1f;
         }
 
-        // Create the rectangle on the image
+        // Project the target tile on the user image
         sourceRect.set(
                 sourceWidth * (xRatio + xDiff) * xFactor,
                 sourceHeight * (yRatio + yDiff) * yFactor,
@@ -64,6 +107,7 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
                 sourceHeight * (yRatio + yDiff + heightRatio) * yFactor
         );
 
+        // If out of the user image, ignore this tile
         if (sourceRect.right <= 0 ||
                 sourceRect.left >= sourceWidth ||
                 sourceRect.bottom <= 0 ||
@@ -71,8 +115,12 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
             return;
         }
 
+        // Will probably draw the whole tile
         destRect.set(0, 0, canvas.getWidth(), canvas.getHeight());
 
+        // But at the edge of the user image it's possible that
+        // a tile contains some empty space. Removes that space
+        // for performance.
         if (sourceRect.top < 0) {
             destRect.top -= sourceRect.top * initialScale * scale;
             sourceRect.top = 0;
@@ -95,7 +143,37 @@ public abstract class FixedImageSizeTileRenderer implements TileRenderer {
 
     }
 
-    protected abstract void renderTile(Canvas canvas, RectF sourceRect, RectF destRect);
+    @Override
+    public void onClick(float xRatio, float yRatio, float contentInitialWidth, float contentInitialHeight, float scale) {
 
+    }
+
+    @Override
+    public PointF getPosition(float x, float y) {
+        return null;
+    }
+
+    @Override
+    public void drawLayer(Canvas canvas, float scale, float contentInitialWidth, float contentInitialHeight) {
+
+    }
+
+    @Override
+    public void animateTo(float x, float y, int zoomLevel, CancelableCallback callback) {
+
+    }
+
+    @Override
+    public void animateTo(float x, float y, int zoomLevel) {
+
+    }
+
+    /**
+     * Render a tile.
+     * @param canvas     The canvas on which to draw the tile.
+     * @param sourceRect The bounds of the tile in the source image, in pixels.
+     * @param destRect   The bounds on which to draw the destination image, in pixels.
+     */
+    protected abstract void renderTile(Canvas canvas, RectF sourceRect, RectF destRect);
 
 }

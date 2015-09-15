@@ -3,7 +3,7 @@ package com.joanzapata.tilesview.internal;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.util.SparseArray;
-import com.joanzapata.tilesview.TileRenderer;
+import com.joanzapata.tilesview.TilesViewAdapter;
 
 import static com.joanzapata.tilesview.TilesView.TILE_SIZE;
 
@@ -16,9 +16,6 @@ public class TilePool {
 
     /** Callback for rendered tiles */
     private TilePoolListener tilePoolListener;
-
-    /** User class used to draw content on tiles */
-    private TileRenderer tileRenderer;
 
     private SparseArray<Tile[][]> tilesByZoomLevel;
 
@@ -34,7 +31,9 @@ public class TilePool {
 
     private int maxTasks;
 
-    public TilePool(int tilesBackgroundColor, TilePoolListener tilePoolListener) {
+    private TilesViewAdapter adapter;
+
+    public TilePool(TilePoolListener tilePoolListener) {
         this.tilePoolListener = tilePoolListener;
         this.tilesBackgroundColor = tilesBackgroundColor;
         this.tilesByZoomLevel = new SparseArray<Tile[][]>();
@@ -43,10 +42,14 @@ public class TilePool {
         this.nbTiles = 0;
     }
 
+    public void setTilesBackgroundColor(int tilesBackgroundColor) {
+        this.tilesBackgroundColor = tilesBackgroundColor;
+    }
+
     public Bitmap getTile(final int zoomLevel, final int xIndex, final int yIndex, final float contentWidth, final float contentHeight) {
 
         // Don't try to render anything if there's no tile renderer
-        if (tileRenderer == null) return null;
+        if (adapter == null) return null;
 
         // Get the tiles array for the given zoom (or create it)
         Tile[][] tiles = tilesByZoomLevel.get(zoomLevel);
@@ -112,7 +115,7 @@ public class TilePool {
     }
 
     public Bitmap getPlaceholder(final float contentWidth, final float contentHeight) {
-        if (tileRenderer == null || placeholderRunnable != null || contentWidth == 0 || contentHeight == 0)
+        if (adapter == null || placeholderRunnable != null || contentWidth == 0 || contentHeight == 0)
             return null;
 
         if (placeholder != null)
@@ -127,9 +130,9 @@ public class TilePool {
                         Bitmap.Config.RGB_565);
                 Canvas canvas = new Canvas(bitmap);
                 canvas.drawColor(tilesBackgroundColor);
-                tileRenderer.renderTile(canvas,
+                adapter.drawTile(canvas,
                         0f, 0f, 1f, 1f,
-                        contentWidth, contentHeight);
+                        contentWidth, contentHeight, 1f);
                 placeholder = bitmap;
                 placeholderRunnable = null;
             }
@@ -139,14 +142,14 @@ public class TilePool {
         return placeholder;
     }
 
-    public void setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
-        clear();
 
-        if (tileRenderer != null) {
+    public void setAdapter(TilesViewAdapter tilesViewAdapter) {
+        clear();
+        if (tilesViewAdapter != null) {
             int nbCores = Runtime.getRuntime().availableProcessors();
-            executor = new LIFOExecutor(threadSafe ? nbCores : 1);
+            executor = new LIFOExecutor(tilesViewAdapter.isThreadSafe() ? nbCores : 1);
             executor.setCapacity(maxTasks);
-            this.tileRenderer = tileRenderer;
+            adapter = tilesViewAdapter;
         }
     }
 
@@ -157,7 +160,7 @@ public class TilePool {
     }
 
     public void clear() {
-        tileRenderer = null;
+        executor = null;
 
         // Stop existing executor service
         if (executor != null) {
@@ -210,12 +213,12 @@ public class TilePool {
             Canvas canvas = new Canvas(bitmap);
             canvas.drawColor(tilesBackgroundColor);
             float zoom = zoomLevel / 10f;
-            tileRenderer.renderTile(canvas,
+            adapter.drawTile(canvas,
                     xIndex * TILE_SIZE / zoom / contentWidth,
                     yIndex * TILE_SIZE / zoom / contentHeight,
                     TILE_SIZE / zoom / contentWidth,
                     TILE_SIZE / zoom / contentHeight,
-                    contentWidth, contentHeight);
+                    contentWidth, contentHeight, zoom);
             tile.setBitmap(bitmap);
 
             // Can happen from getTile() on main thread.

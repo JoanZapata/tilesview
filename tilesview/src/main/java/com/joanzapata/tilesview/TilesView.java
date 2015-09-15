@@ -6,6 +6,7 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -74,13 +75,15 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private boolean viewAlreadyLoaded = false;
 
+    private TilesViewAdapter adapter;
+
+    public TilesView(Context context) {
+        this(context, null);
+    }
+
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        int backgroundColor = Color.BLACK;
-        if (getBackground() instanceof ColorDrawable)
-            backgroundColor = ((ColorDrawable) getBackground()).getColor();
-        this.tilePool = new TilePool(backgroundColor, this);
+        this.tilePool = new TilePool(this);
         this.layers = new ArrayList<Layer>();
         this.contentPaddingLeft = 0;
         this.contentPaddingTop = 0;
@@ -97,9 +100,19 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         debugPaint.setTextAlign(Paint.Align.CENTER);
         debugPaint.setStyle(Paint.Style.STROKE);
         backgroundPaint = new Paint();
-        backgroundPaint.setColor(backgroundColor);
+        backgroundPaint.setColor(Color.BLACK);
         backgroundPaint.setStyle(Paint.Style.FILL);
-        setBackground(null);
+        setBackground(getBackground());
+    }
+
+    @Override
+    public void setBackground(Drawable background) {
+        if (backgroundPaint != null && background instanceof ColorDrawable) {
+            int backgroundColor = ((ColorDrawable) background).getColor();
+            backgroundPaint.setColor(backgroundColor);
+            tilePool.setTilesBackgroundColor(backgroundColor);
+        }
+        super.setBackground(null);
     }
 
     @Override
@@ -111,7 +124,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public TilesView clear() {
         if (currentAnimator != null) currentAnimator.cancel();
         layers.clear();
-        tilePool.setTileRenderer(null, true);
+        tilePool.setAdapter(null);
         scale = 1f;
         zoomLevelWithUserBounds = 10;
         zoomLevel = zoomLevelForScale(scale, SCALE_TYPE_ROUND);
@@ -461,15 +474,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return tileLoaded;
     }
 
-    public TilesView setTileRenderer(TileRenderer tileRenderer) {
-        return setTileRenderer(tileRenderer, true);
-    }
-
-    public TilesView setTileRenderer(TileRenderer tileRenderer, boolean threadSafe) {
+    public void setAdapter(TilesViewAdapter tilesViewAdapter) {
         viewAlreadyLoaded = false;
-        tilePool.setTileRenderer(tileRenderer, threadSafe);
+        adapter = tilesViewAdapter;
+        tilePool.setAdapter(adapter);
         postInvalidate();
-        return this;
     }
 
     @Override
