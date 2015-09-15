@@ -7,6 +7,17 @@ import com.joanzapata.tilesview.adapter.FixedSizeAdapter;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Use the fixed size adapter to draw a picture with a resolution of 11730 x 6351.
+ * You couldn't display this image in an Android ImageView if you wanted because it's
+ * too large, and you downsampling it would make you loose all the details.
+ * <br>
+ * The TilesView combined with the Android BitmapRegionDecoder allows you to display
+ * the whole image at an acceptable resolution, and display the details only where the
+ * user is zooming, thus keeping a low memory footprint.
+ * <br>
+ * This is basically what the TilesView was made for.
+ */
 public class Adapter2FixedSize extends FixedSizeAdapter {
 
     private final BitmapRegionDecoder decoder;
