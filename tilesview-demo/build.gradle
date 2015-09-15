@@ -1,37 +1,48 @@
 buildscript {
-    repositories {
-        jcenter()
-    }
     dependencies {
-        classpath 'com.android.tools.build:gradle:1.1.1'
+        classpath rootProject.ext.androidPlugin
     }
 }
 
 apply plugin: 'com.android.application'
 
-repositories {
-    jcenter()
-}
-
 android {
-    compileSdkVersion 21
-    buildToolsVersion "22.0.1"
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        applicationId "com.joanzapata.tilesview"
-        minSdkVersion 17
-        targetSdkVersion 21
-        versionCode 1
-        versionName "1.0"
+        applicationId "com.joanzapata.tilesview.sample"
+        minSdkVersion 8
+        targetSdkVersion rootProject.ext.compileSdkVersion
+        versionCode VERSION_CODE.toInteger()
+        versionName VERSION_NAME
+    }
+
+    def password = project.hasProperty('TILESVIEW_SAMPLE_KEYSTORE_PASSWORD') ?
+            project.property('TILESVIEW_SAMPLE_KEYSTORE_PASSWORD') : ''
+    signingConfigs {
+        release {
+            storeFile file("keystore")
+            storePassword password
+            keyAlias "tilesview"
+            keyPassword password
+        }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_6
         targetCompatibility JavaVersion.VERSION_1_6
     }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
 }
 
 dependencies {
     compile project(':tilesview')
-    compile 'com.jug6ernaut:debugdrawer:0.6.1'
+    compile 'com.android.support:appcompat-v7:22.2.1'
 }

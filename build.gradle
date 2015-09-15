@@ -1,14 +1,6 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
     repositories {
         jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:1.1.1'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
@@ -16,24 +8,16 @@ allprojects {
     repositories {
         jcenter()
     }
+}
 
-    apply plugin: 'maven'
-    group = 'com.joanzapata.tilesview'
-    version = '0.0.1-SNAPSHOT'
+subprojects {
+    group = GROUP
+    version = VERSION_NAME
+}
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                repository(url: deploymentRepositoryUrl) {
-                    authentication(userName: deploymentUsername, password: deploymentPassword)
-                }
-                snapshotRepository(url: deploymentSnapshotRepositoryUrl) {
-                    authentication(userName: deploymentUsername, password: deploymentPassword)
-                }
-                pom.version = project.version
-                pom.artifactId = project.name
-                pom.groupId = project.group
-            }
-        }
-    }
+ext {
+    androidPlugin = 'com.android.tools.build:gradle:1.3.0'
+    minSdkVersion = 4
+    compileSdkVersion = 22
+    buildToolsVersion = '23.0.1'
 }
