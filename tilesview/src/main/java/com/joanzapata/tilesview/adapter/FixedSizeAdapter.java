@@ -12,6 +12,8 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     private final ThreadLocal<RectF> sourceRectTL, destRectTL;
     private final float sourceWidth;
     private final float sourceHeight;
+    private float scale;
+    private float sourceInitialRatio;
 
     public FixedSizeAdapter(float width, float height) {
         this.sourceWidth = width;
@@ -85,13 +87,13 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         // Try using source sourceWidth as reference
         float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
         if (scaledSourceHeight <= contentInitialHeight) {
-            initialScale = contentInitialWidth / sourceWidth;
+            sourceInitialRatio = contentInitialWidth / sourceWidth;
             xDiff = 0f;
             yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
             xFactor = 1f;
             yFactor = contentInitialHeight / scaledSourceHeight;
         } else {
-            initialScale = contentInitialHeight / sourceHeight;
+            sourceInitialRatio = contentInitialHeight / sourceHeight;
             float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
             xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
             yDiff = 0f;
@@ -122,24 +124,24 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         // a tile contains some empty space. Removes that space
         // for performance.
         if (sourceRect.top < 0) {
-            destRect.top -= sourceRect.top * initialScale * scale;
+            destRect.top -= sourceRect.top * sourceInitialRatio * scale;
             sourceRect.top = 0;
         }
         if (sourceRect.left < 0) {
-            destRect.left -= sourceRect.left * initialScale * scale;
+            destRect.left -= sourceRect.left * sourceInitialRatio * scale;
             sourceRect.left = 0;
         }
         if (sourceRect.right > sourceWidth) {
-            destRect.right += (sourceWidth - sourceRect.right) * initialScale * scale;
+            destRect.right += (sourceWidth - sourceRect.right) * sourceInitialRatio * scale;
             sourceRect.right = sourceWidth;
         }
         if (sourceRect.bottom > sourceHeight) {
-            destRect.bottom += (sourceHeight - sourceRect.bottom) * initialScale * scale;
+            destRect.bottom += (sourceHeight - sourceRect.bottom) * sourceInitialRatio * scale;
             sourceRect.bottom = sourceHeight;
         }
 
         // Call user code
-        renderTile(canvas, sourceRect, destRect);
+        drawTile(canvas, sourceRect, destRect);
 
     }
 
@@ -154,7 +156,28 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public void drawLayer(Canvas canvas, float scale, float contentInitialWidth, float contentInitialHeight) {
+    public final void drawLayer(Canvas canvas, float scale, float contentInitialWidth, float contentInitialHeight) {
+
+        // Try using source width as reference
+        float translateX, translateY;
+        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
+        float sourceRatioOnZoom1;
+        if (scaledSourceHeight <= contentInitialHeight) {
+            sourceRatioOnZoom1 = contentInitialWidth / sourceWidth;
+            translateX = 0;
+            translateY = (contentInitialHeight - sourceHeight * sourceRatioOnZoom1) / 2f * scale;
+        } else {
+            sourceRatioOnZoom1 = contentInitialHeight / sourceHeight;
+            translateX = (contentInitialWidth - sourceWidth * sourceRatioOnZoom1) / 2f * scale;
+            translateY = 0;
+        }
+
+        canvas.translate(translateX, translateY);
+
+        this.scale = scale;
+        this.sourceInitialRatio = sourceRatioOnZoom1;
+        drawLayer(canvas, scale);
+
 
     }
 
@@ -174,6 +197,18 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
      * @param sourceRect The bounds of the tile in the source image, in pixels.
      * @param destRect   The bounds on which to draw the destination image, in pixels.
      */
-    protected abstract void renderTile(Canvas canvas, RectF sourceRect, RectF destRect);
+    protected abstract void drawTile(Canvas canvas, RectF sourceRect, RectF destRect);
 
+    public void drawLayer(Canvas canvas, float scale) {
+        // Default implementation does nothing
+    }
+
+    /**
+     * TODO JAVADOC
+     * @param pixelSizeOnSourceImage
+     * @return
+     */
+    protected float scaled(float pixelSizeOnSourceImage) {
+        return pixelSizeOnSourceImage * sourceInitialRatio * scale;
+    }
 }

@@ -6,15 +6,22 @@
               android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/veryBasic"
+        android:id="@+id/sample1"
         android:text="Example of DefaultAdapter"
         android:textAllCaps="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <Button
-        android:id="@+id/mapWithLayer"
+        android:id="@+id/sample2"
         android:text="Example of FixedSizeAdapter"
+        android:textAllCaps="false"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/sample3"
+        android:text="Example of FixedSizeAdapter with Layer"
         android:textAllCaps="false"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />

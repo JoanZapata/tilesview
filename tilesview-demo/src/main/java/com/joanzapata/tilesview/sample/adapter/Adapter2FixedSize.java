@@ -33,7 +33,7 @@ public class Adapter2FixedSize extends FixedSizeAdapter {
     }
 
     @Override
-    protected void renderTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
+    protected void drawTile(Canvas canvas, RectF sourceRectF, RectF destRect) {
         Rect sourceRect = new Rect(
                 (int) sourceRectF.left, (int) sourceRectF.top,
                 (int) sourceRectF.right, (int) sourceRectF.bottom);

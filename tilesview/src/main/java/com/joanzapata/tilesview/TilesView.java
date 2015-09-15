@@ -16,9 +16,6 @@ import com.joanzapata.tilesview.internal.Tile;
 import com.joanzapata.tilesview.internal.TilePool;
 import com.joanzapata.tilesview.util.ScrollAndZoomDetector;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
 
     public static final int TILE_SIZE = 256;
@@ -68,7 +65,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private RectF reusableRectF = new RectF();
     private Rect reusableRect = new Rect();
-    private List<Layer> layers;
     private boolean debug = false;
     private ValueAnimator currentAnimator;
     private OnZoomLevelChangedListener onZoomLevelChangedListener;
@@ -84,7 +80,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public TilesView(Context context, AttributeSet attrs) {
         super(context, attrs);
         this.tilePool = new TilePool(this);
-        this.layers = new ArrayList<Layer>();
         this.contentPaddingLeft = 0;
         this.contentPaddingTop = 0;
         this.contentPaddingRight = 0;
@@ -123,7 +118,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public TilesView clear() {
         if (currentAnimator != null) currentAnimator.cancel();
-        layers.clear();
         tilePool.setAdapter(null);
         scale = 1f;
         zoomLevelWithUserBounds = 10;
@@ -132,12 +126,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         offsetY = -getPaddingTop() - getContentPaddingTop();
         viewAlreadyLoaded = false;
         onViewLoadedCallback = null;
-        postInvalidate();
-        return this;
-    }
-
-    public TilesView addLayer(Layer layer) {
-        layers.add(layer);
         postInvalidate();
         return this;
     }
@@ -357,13 +345,9 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
         }
 
-        // Render user layers
-        for (int i = 0, size = layers.size(); i < size; i++) {
-            Layer layer = layers.get(i);
-            canvas.save();
-            layer.renderLayer(canvas, scale, contentWidth, contentHeight);
-            canvas.restore();
-        }
+        // Render user layer
+        if (adapter != null)
+            adapter.drawLayer(canvas, scale, contentWidth, contentHeight);
 
         canvas.restore();
 
