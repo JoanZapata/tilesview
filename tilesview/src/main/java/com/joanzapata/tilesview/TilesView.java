@@ -561,18 +561,18 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         if (zoomLevel > 10)
             zoomLevel = (int) (10 + Math.pow(2, zoomLevel - 10));
 
-        currentAnimator = ValueAnimator.ofFloat(0f, 1f);
-        currentAnimator.setDuration(ANIMATE_TO_DURATION);
-        currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
-        currentAnimator.addListener(new ValueAnimator.AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationCancel() {
-                if (callback != null) {
-                    callback.onAnimationCancel();
-                }
-            }
-        });
-        currentAnimator.start();
+        currentAnimator = ValueAnimator.ofFloat(0f, 1f)
+                .setDuration(ANIMATE_TO_DURATION)
+                .setInterpolator(DOUBLE_TAP_INTERPOLATOR)
+                .addListener(new ValueAnimator.AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationCancel() {
+                        if (callback != null) {
+                            callback.onAnimationCancel();
+                        }
+                    }
+                }).start();
+
         final float xScreenCenterOnContent = (offsetX + getWidth() / 2f) / scale;
         final float yScreenCenterOnContent = (offsetY + getHeight() / 2f) / scale;
         final float targetScale = zoomLevel / 10f;
@@ -622,10 +622,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private void animateScaleTo(final float newScale, final float focusXOnScreen, final float focusYOnScreen, final long duration) {
         if (currentAnimator != null) currentAnimator.cancel();
-        currentAnimator = ValueAnimator.ofFloat(scale, newScale);
-        currentAnimator.setDuration(duration);
-        currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
-        currentAnimator.start();
+        currentAnimator = ValueAnimator.ofFloat(scale, newScale)
+                .setDuration(duration)
+                .setInterpolator(DOUBLE_TAP_INTERPOLATOR)
+                .start();
         Runnable animation = new Runnable() {
             @Override
             public void run() {

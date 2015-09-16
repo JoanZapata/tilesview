@@ -81,8 +81,9 @@ public class AndroidCompatUtil {
             return this;
         }
 
-        public void start() {
+        public ValueAnimator start() {
             startTime = System.currentTimeMillis();
+            return this;
         }
 
         public float getAnimatedValue() {
