@@ -146,8 +146,36 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public void onClick(float xRatio, float yRatio, float contentInitialWidth, float contentInitialHeight, float scale) {
+    public final void onClick(float xRatio, float yRatio, float contentInitialWidth, float contentInitialHeight, float scale) {
 
+        // Try using source width as reference
+        float xDiff, yDiff;
+        float xFactor, yFactor;
+        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
+        float initialScale;
+        if (scaledSourceHeight <= contentInitialHeight) {
+            initialScale = contentInitialWidth / sourceWidth;
+            xDiff = 0f;
+            yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
+            xFactor = 1f;
+            yFactor = contentInitialHeight / scaledSourceHeight;
+        } else {
+            initialScale = contentInitialHeight / sourceHeight;
+            float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
+            xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
+            yDiff = 0f;
+            xFactor = contentInitialWidth / scaledSourceWidth;
+            yFactor = 1f;
+        }
+
+        float contentX = (xRatio + xDiff) * xFactor * sourceWidth;
+        float contentY = (yRatio + yDiff) * yFactor * sourceHeight;
+
+        if (contentX < 0 || contentX > sourceWidth
+                || contentY < 0 || contentY > sourceHeight)
+            return;
+
+        onClick(contentX, contentY, initialScale * scale);
     }
 
     @Override
@@ -200,6 +228,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     protected abstract void drawTile(Canvas canvas, RectF sourceRect, RectF destRect);
 
     public void drawLayer(Canvas canvas, float scale) {
+        // Default implementation does nothing
+    }
+
+    public void onClick(float x, float y, float scale) {
         // Default implementation does nothing
     }
 

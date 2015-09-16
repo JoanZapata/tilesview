@@ -59,8 +59,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     private ScrollAndZoomDetector scrollAndZoomDetector;
 
-    private OnContentTappedListener onContentTappedListener;
-
     private OnViewLoadedCallback onViewLoadedCallback;
 
     private RectF reusableRectF = new RectF();
@@ -160,11 +158,6 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public TilesView setOnZoomLevelChangedListener(OnZoomLevelChangedListener onZoomLevelChangedListener) {
         this.onZoomLevelChangedListener = onZoomLevelChangedListener;
-        return this;
-    }
-
-    public TilesView setOnContentTappedListener(OnContentTappedListener onContentTappedListener) {
-        this.onContentTappedListener = onContentTappedListener;
         return this;
     }
 
@@ -668,13 +661,14 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public void onSingleTap(float screenX, float screenY) {
-        if (onContentTappedListener != null) {
+        if (adapter != null) {
             float contentWidth = getContentWidth();
             float contentHeight = getContentHeight();
             float contentX = (screenX + offsetX) / scale;
             float contentY = (screenY + offsetY) / scale;
-            onContentTappedListener.onContentTapped(
-                    contentX / contentWidth, contentY / contentHeight,
+            adapter.onClick(
+                    contentX / contentWidth,
+                    contentY / contentHeight,
                     contentWidth, contentHeight, scale);
         }
     }
