@@ -1,6 +1,7 @@
 package com.joanzapata.tilesview.util;
 
 import android.content.Context;
+import android.support.v4.view.ViewCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -74,7 +75,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
                             currY - overScroller.getCurrY());
                     currX = overScroller.getCurrX();
                     currY = overScroller.getCurrY();
-                    referenceView.postOnAnimation(this);
+                    ViewCompat.postOnAnimation(referenceView, this);
                 }
             }
         };
@@ -84,7 +85,7 @@ public class ScrollAndZoomDetector implements GestureDetector.OnGestureListener,
                 -Integer.MAX_VALUE, Integer.MAX_VALUE,
                 -Integer.MAX_VALUE, Integer.MAX_VALUE);
 
-        referenceView.postOnAnimation(animation);
+        ViewCompat.postOnAnimation(referenceView, animation);
         return true;
     }
 
