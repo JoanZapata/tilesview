@@ -2,7 +2,7 @@ package com.joanzapata.tilesview.adapter;
 
 import android.graphics.Canvas;
 import android.graphics.PointF;
-import com.joanzapata.tilesview.CancelableCallback;
+import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
 
@@ -76,12 +76,22 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public final void animateTo(float x, float y, int zoomLevel, CancelableCallback callback) {
+    public final void animateTo(float x, float y, int zoomLevel, AnimationCallback callback) {
         tilesView.animateTo(x, y, zoomLevel, callback);
     }
 
     @Override
     public final void animateTo(float x, float y, int zoomLevel) {
         animateTo(x, y, zoomLevel, null);
+    }
+
+    @Override
+    public void animateTo(float x, float y, AnimationCallback callback) {
+        animateTo(x, y, tilesView.getZoomLevel(), callback);
+    }
+
+    @Override
+    public void animateTo(float x, float y) {
+        animateTo(x, y, tilesView.getZoomLevel(), null);
     }
 }

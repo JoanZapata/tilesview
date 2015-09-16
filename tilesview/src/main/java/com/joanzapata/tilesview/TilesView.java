@@ -1,12 +1,10 @@
 package com.joanzapata.tilesview;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -14,6 +12,8 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
 import com.joanzapata.tilesview.internal.Tile;
 import com.joanzapata.tilesview.internal.TilePool;
+import com.joanzapata.tilesview.util.AndroidCompatUtil;
+import com.joanzapata.tilesview.util.AndroidCompatUtil.ValueAnimator;
 import com.joanzapata.tilesview.util.ScrollAndZoomDetector;
 
 public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZoomListener, TilePool.TilePoolListener {
@@ -23,7 +23,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     private static final int MAX_ZOOM_LEVEL = 10 + (int) Math.pow(2, 8);
     private static final int MIN_ZOOM_LEVEL = 5;
     private static final int DOUBLE_TAP_DURATION = 400;
-    private static final int ANIMATE_TO_DURATION = 800;
+    private static final int ANIMATE_TO_DURATION = 600;
     private static final Interpolator DOUBLE_TAP_INTERPOLATOR = new AccelerateDecelerateInterpolator();
     private static final long SCALE_ADJUSTMENT_DURATION = 200;
     public static final int SCALE_TYPE_FLOOR = 1;
@@ -101,7 +101,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     @Override
     public void setBackground(Drawable background) {
         if (backgroundPaint != null && background instanceof ColorDrawable) {
-            int backgroundColor = ((ColorDrawable) background).getColor();
+            int backgroundColor = AndroidCompatUtil.getColor(background);
             backgroundPaint.setColor(backgroundColor);
             tilePool.setTilesBackgroundColor(backgroundColor);
         }
@@ -454,6 +454,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public void setAdapter(TilesViewAdapter tilesViewAdapter) {
         viewAlreadyLoaded = false;
         adapter = tilesViewAdapter;
+        adapter.attachTilesView(this);
         tilePool.setAdapter(adapter);
         postInvalidate();
     }
@@ -554,11 +555,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return true;
     }
 
-    public void animateTo(float x, float y, int zoomLevel) {
-        animateTo(x, y, zoomLevel, null);
-    }
-
-    public void animateTo(final float x, final float y, int zoomLevel, final CancelableCallback callback) {
+    public void animateTo(final float x, final float y, int zoomLevel, final AnimationCallback callback) {
         if (currentAnimator != null) currentAnimator.cancel();
 
         if (zoomLevel > 10)
@@ -567,11 +564,11 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         currentAnimator = ValueAnimator.ofFloat(0f, 1f);
         currentAnimator.setDuration(ANIMATE_TO_DURATION);
         currentAnimator.setInterpolator(DOUBLE_TAP_INTERPOLATOR);
-        currentAnimator.addListener(new AnimatorListenerAdapter() {
+        currentAnimator.addListener(new ValueAnimator.AnimatorListenerAdapter() {
             @Override
-            public void onAnimationCancel(Animator animation) {
+            public void onAnimationCancel() {
                 if (callback != null) {
-                    callback.onCancel();
+                    callback.onAnimationCancel();
                 }
             }
         });
@@ -586,7 +583,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             @Override
             public void run() {
 
-                Float animatedValue = (Float) currentAnimator.getAnimatedValue();
+                float animatedValue = currentAnimator.getAnimatedValue();
                 float animatedValueForXY = DOUBLE_TAP_INTERPOLATOR.getInterpolation(animatedValue);
                 float xCurrentOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent) * animatedValueForXY;
                 float yCurrentOnContent = yScreenCenterOnContent + (y - yScreenCenterOnContent) * animatedValueForXY;
@@ -596,7 +593,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 onScroll(xCurrentOffset - offsetX, yCurrentOffset - offsetY);
 
                 if (currentAnimator.isRunning()) {
-                    postOnAnimation(this);
+                    ViewCompat.postOnAnimation(TilesView.this, this);
                 } else {
                     if (animatedValue != 1f) {
                         float xFinalOnContent = xScreenCenterOnContent + (x - xScreenCenterOnContent);
@@ -608,7 +605,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                     }
 
                     if (callback != null) {
-                        callback.onFinish();
+                        callback.onAnimationFinish();
                     }
                 }
 
@@ -616,7 +613,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             }
         };
 
-        postOnAnimation(animation);
+        ViewCompat.postOnAnimation(this, animation);
     }
 
     public PointF getPositionInView(float x, float y) {
@@ -632,10 +629,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         Runnable animation = new Runnable() {
             @Override
             public void run() {
-                Float animatedValue = (Float) currentAnimator.getAnimatedValue();
+                float animatedValue = currentAnimator.getAnimatedValue();
                 onScale(animatedValue / scale, focusXOnScreen, focusYOnScreen);
                 if (currentAnimator.isRunning()) {
-                    postOnAnimation(this);
+                    ViewCompat.postOnAnimation(TilesView.this, this);
                 } else {
                     if (animatedValue != newScale) {
                         onScale(newScale / scale, focusXOnScreen, focusYOnScreen);
@@ -646,8 +643,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
                 invalidate();
             }
         };
-
-        postOnAnimation(animation);
+        ViewCompat.postOnAnimation(TilesView.this, animation);
     }
 
     @Override

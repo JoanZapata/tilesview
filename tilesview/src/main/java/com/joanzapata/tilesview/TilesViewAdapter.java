@@ -18,8 +18,8 @@ public interface TilesViewAdapter {
     int DEFAULT_MAX_ZOOM_LEVEL = 256;
 
     /**
-     * Use this to keep a reference to the associated TilesView. This is called
-     * by TilesView and should not be called by the user.
+     * This is called by TilesView and should not be called by the user.
+     * Used to keep a reference on the associated TilesView for animations.
      */
     void attachTilesView(TilesView tilesView);
 
@@ -159,11 +159,21 @@ public interface TilesViewAdapter {
      * @param zoomLevel The target zoomLevel.
      * @param callback  A callback to be notified when the animation ends or is cancelled.
      */
-    void animateTo(final float x, final float y, int zoomLevel, final CancelableCallback callback);
+    void animateTo(float x, float y, int zoomLevel, AnimationCallback callback);
 
     /**
-     * Same as {@link #animateTo(float, float, int, CancelableCallback)} with no callback.
+     * Same as {@link #animateTo(float, float, int, AnimationCallback)} without changing the zoom level.
+     */
+    void animateTo(float x, float y, AnimationCallback callback);
+
+    /**
+     * Same as {@link #animateTo(float, float, int, AnimationCallback)} without a callback.
      */
     void animateTo(float x, float y, int zoomLevel);
+
+    /**
+     * Same as {@link #animateTo(float, float, int, AnimationCallback)} without zoom and callback.
+     */
+    void animateTo(float x, float y);
 
 }

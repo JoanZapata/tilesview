@@ -63,6 +63,7 @@ public class Adapter3FixedSizeEnhanced extends Adapter2FixedSize {
             POI poi = pois.get(i);
             if (poi.contains(x, y, scale)) {
                 Toast.makeText(context, poi.name, Toast.LENGTH_LONG).show();
+                animateTo(x, y);
                 break;
             }
         }

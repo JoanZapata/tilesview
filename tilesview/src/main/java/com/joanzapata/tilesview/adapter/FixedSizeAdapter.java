@@ -3,7 +3,7 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import com.joanzapata.tilesview.CancelableCallback;
+import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
 
@@ -14,6 +14,7 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     private final float sourceHeight;
     private float scale;
     private float sourceInitialRatio;
+    private TilesView tilesView;
 
     public FixedSizeAdapter(float width, float height) {
         this.sourceWidth = width;
@@ -24,7 +25,7 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public void attachTilesView(TilesView tilesView) {
-
+        this.tilesView = tilesView;
     }
 
     @Override
@@ -201,22 +202,44 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         }
 
         canvas.translate(translateX, translateY);
-
         this.scale = scale;
         this.sourceInitialRatio = sourceRatioOnZoom1;
         drawLayer(canvas, scale);
-
-
     }
 
     @Override
-    public void animateTo(float x, float y, int zoomLevel, CancelableCallback callback) {
+    public void animateTo(float x, float y, int zoomLevel, AnimationCallback callback) {
+        float contentWidth = tilesView.getContentWidth();
+        float contentHeight = tilesView.getContentHeight();
+        float xDiff, yDiff, factor;
+        float scaledSourceHeight = contentWidth * sourceHeight / sourceWidth;
+        if (scaledSourceHeight <= contentHeight) {
+            factor = scaledSourceHeight / sourceHeight;
+            xDiff = 0f;
+            yDiff = (contentHeight - scaledSourceHeight) / 2f;
+        } else {
+            float scaledSourceWidth = contentHeight * sourceWidth / sourceHeight;
+            factor = scaledSourceWidth / sourceWidth;
+            xDiff = (contentWidth - scaledSourceWidth) / 2f;
+            yDiff = 0f;
+        }
 
+        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor, zoomLevel, callback);
     }
 
     @Override
     public void animateTo(float x, float y, int zoomLevel) {
+        this.animateTo(x, y, zoomLevel, null);
+    }
 
+    @Override
+    public void animateTo(float x, float y, AnimationCallback callback) {
+        this.animateTo(x, y, tilesView.getZoomLevel(), callback);
+    }
+
+    @Override
+    public void animateTo(float x, float y) {
+        this.animateTo(x, y, tilesView.getZoomLevel(), null);
     }
 
     /**
