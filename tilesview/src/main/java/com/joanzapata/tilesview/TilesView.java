@@ -616,8 +616,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         ViewCompat.postOnAnimation(this, animation);
     }
 
-    public PointF getPositionInView(float x, float y) {
-        return new PointF(x * scale - offsetX, y * scale - offsetY);
+    public void getPositionInView(float x, float y, PointF position) {
+        position.set(x * scale - offsetX, y * scale - offsetY);
     }
 
     private void animateScaleTo(final float newScale, final float focusXOnScreen, final float focusYOnScreen, final long duration) {

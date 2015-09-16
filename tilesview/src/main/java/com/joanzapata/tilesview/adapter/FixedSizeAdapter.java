@@ -72,7 +72,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
         float xDiff, yDiff;
         float xFactor, yFactor;
-        float initialScale;
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -180,8 +179,27 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public PointF getPosition(float x, float y) {
-        return null;
+    public void getPosition(float x, float y, PointF position) {
+        float xDiff, yDiff;
+        float xFactor, yFactor;
+        float scaledSourceHeight = tilesView.getContentWidth() * sourceHeight / sourceWidth;
+        if (scaledSourceHeight <= tilesView.getContentHeight()) {
+            xDiff = 0f;
+            yDiff = -(tilesView.getContentHeight() - scaledSourceHeight) / 2f / tilesView.getContentHeight();
+            xFactor = 1f;
+            yFactor = tilesView.getContentHeight() / scaledSourceHeight;
+        } else {
+            float scaledSourceWidth = tilesView.getContentHeight() * sourceWidth / sourceHeight;
+            xDiff = -(tilesView.getContentWidth() - scaledSourceWidth) / 2f / tilesView.getContentWidth();
+            yDiff = 0f;
+            xFactor = tilesView.getContentWidth() / scaledSourceWidth;
+            yFactor = 1f;
+        }
+
+        float contentX = (x / (xFactor * sourceWidth) - xDiff) * tilesView.getContentWidth();
+        float contentY = (y / (yFactor * sourceHeight) - yDiff) * tilesView.getContentHeight();
+
+        tilesView.getPositionInView(contentX, contentY, position);
     }
 
     @Override

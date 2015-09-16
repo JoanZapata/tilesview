@@ -131,12 +131,14 @@ public interface TilesViewAdapter {
     void onClick(float xRatio, float yRatio, float contentInitialWidth, float contentInitialHeight, float scale);
 
     /**
-     * Translate an offset on the screen to an offset in the content, regarding the current scale and scroll.
-     * @param x The X position on the TilesView.
-     * @param y The Y position on the TilesView.
-     * @return The position of X,Y on the content, with values between 0 and 1, relative to the contentInitialWidth/Height.
+     * Translate an offset on the TilesView to an offset in the content, regarding the current scale and scroll.
+     * @param x        The X position on the TilesView.
+     * @param y        The Y position on the TilesView.
+     * @param position The PointF that will be filled with the result. (This is a performance improvement, it
+     *                 allows you to reuse a PointF instance instead of creating a new one each time you call
+     *                 this method.)
      */
-    PointF getPosition(float x, float y);
+    void getPosition(float x, float y, PointF position);
 
     /**
      * Draw something in the TilesView on top of the tiles. This is called on the UI

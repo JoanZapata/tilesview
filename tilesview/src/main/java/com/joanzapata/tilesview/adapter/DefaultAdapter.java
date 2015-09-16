@@ -66,8 +66,8 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public final PointF getPosition(float x, float y) {
-        return tilesView.getPositionInView(x, y);
+    public final void getPosition(float x, float y, PointF position) {
+        tilesView.getPositionInView(x, y, position);
     }
 
     @Override
