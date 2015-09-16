@@ -18,6 +18,9 @@ public class Adapter3FixedSizeEnhanced extends Adapter2FixedSize {
 
     public Adapter3FixedSizeEnhanced(Context context) {
         super(context);
+
+        // POIs are placed using X and Y coordinates relatively to the huge map picture.
+        // The anchor point is centered on X but the Y value depends on the POIs bitmap.
         pois = Arrays.asList(
                 new POI("Tajmahal", context, R.drawable.tajmahal, 7876f, 2400f, 5 / 7f),
                 new POI("Big Ben", context, R.drawable.bigben, 5500f, 1531.5f, 4 / 5f),
@@ -29,6 +32,12 @@ public class Adapter3FixedSizeEnhanced extends Adapter2FixedSize {
 
     @Override
     public void drawLayer(Canvas canvas, float scale) {
+
+        /**
+         * Draws every POI at their position. Note the use of {@link #scaled(float)}
+         * which is provided by {@link Adapter2FixedSize} and convert any offset value
+         * from the original image to the actual pixel size.
+         */
         for (int i = 0, size = pois.size(); i < size; i++) {
             POI poi = pois.get(i);
             canvas.drawBitmap(poi.bitmap,
@@ -36,6 +45,7 @@ public class Adapter3FixedSizeEnhanced extends Adapter2FixedSize {
                     scaled(poi.offsetY) + poi.deltaY,
                     null);
         }
+
     }
 
 }
