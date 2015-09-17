@@ -49,7 +49,7 @@ And implement the adapter, subclassing `FixedSizeAdapter`.
 public class BigMapAdapter extends FixedSizeAdapter {
     private final BitmapRegionDecoder decoder;
 
-    public Adapter2FixedSize(BitmapRegionDecoder decoder) {
+    public BigMapAdapter(BitmapRegionDecoder decoder) {
         super(decoder.getWidth(), decoder.getHeight());
         this.decoder = decoder;
     }
