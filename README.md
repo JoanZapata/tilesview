@@ -8,13 +8,15 @@ We had a huge SVG of a big airport indoor map, with lots of details, and we need
 
 We thought it could render a lot faster if we render the SVG to a bitmap once and just draw the bitmap on every frame. But this has **2 problems**: the bitmap would **change size** when the users zooms in and out, and it would get **too big** on higher zoom levels.
 
-So I started working on **tilesview**, with the help of [@NicolasPoirier](https://github.com/NicolasPoirier). It basically cuts whatever you need to display in **tiles**. Tiles are 256x256 images, created on a background thread when needed, and reused as soon as they get offscreen. When the user zooms in, new tiles are rendered with the appropriate scale, but they are still 256x256. **All it needs from you is then to know how to fill those tiles.**
+So I started working on **tilesview**, with the help of [@NicolasPoirier](https://github.com/NicolasPoirier). It basically cuts whatever you need to display in **tiles**. Tiles are `256x256` images, created on a background thread when needed, and reused as soon as they get offscreen. When the user zooms in, new tiles are rendered with the appropriate scale, but they are still `256x256`. **All it needs from you is then to know how to fill those tiles.**
+
+Let's see an example with a [huge `11730x6351` image](https://raw.githubusercontent.com/JoanZapata/tilesview/master/tilesview-demo/src/main/assets/world.jpg) displayed on a `730x400` TilesView.
 
 ![Scale 1](/graphics/scale1.jpg)
 
 ![Scale 2](/graphics/scale2.jpg)
 
-In the example above, you can see the strength of this method: it only needs to build and draw **at most 6 tiles on screen at any given time**. Of course that depends on the screen size, it would probably be 30 or 40 on a real device. Instead of drawing a very huge image or a very complex SVG, the GPU only needs to draw those 30-40 small images, and the GPU is **very good** at it. Using this technique, we reached **60 FPS** again!
+In the example above, you can see the strength of this method: it only needs to build and draw **at most 6 tiles on screen at any given time**. Of course that depends on the screen size. Instead of drawing a very huge image or a very complex SVG, the GPU only needs to draw those 6 small images, no matter what the zoom level is, and the GPU is **very good** at it. Using this technique, we reached **60 FPS** again!
 
 ### Usage
 
