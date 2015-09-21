@@ -709,4 +709,8 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public float getContentHeight() {
         return getHeight() - getPaddingTop() - getPaddingBottom() - getContentPaddingTop() - getContentPaddingBottom();
     }
+
+    public float getScale() {
+        return scale;
+    }
 }

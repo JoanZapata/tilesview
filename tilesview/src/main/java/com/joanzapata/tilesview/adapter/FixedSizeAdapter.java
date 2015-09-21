@@ -65,13 +65,11 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public void drawTile(Canvas canvas,
-            float xRatio, float yRatio,
-            float widthRatio, float heightRatio,
-            float contentInitialWidth, float contentInitialHeight,
-            float scale) {
+                         float xRatio, float yRatio,
+                         float widthRatio, float heightRatio,
+                         float contentInitialWidth, float contentInitialHeight,
+                         float scale) {
 
-        float xDiff, yDiff;
-        float xFactor, yFactor;
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -84,30 +82,13 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
             destRectTL.set(destRect);
         }
 
-        // Try using source sourceWidth as reference
-        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
-        if (scaledSourceHeight <= contentInitialHeight) {
-            sourceInitialRatio = contentInitialWidth / sourceWidth;
-            xDiff = 0f;
-            yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
-            xFactor = 1f;
-            yFactor = contentInitialHeight / scaledSourceHeight;
-        } else {
-            sourceInitialRatio = contentInitialHeight / sourceHeight;
-            float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
-            xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
-            yDiff = 0f;
-            xFactor = contentInitialWidth / scaledSourceWidth;
-            yFactor = 1f;
-        }
-
         // Project the target tile on the user image
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
         sourceRect.set(
-                sourceWidth * (xRatio + xDiff) * xFactor,
-                sourceHeight * (yRatio + yDiff) * yFactor,
-                sourceWidth * (xRatio + xDiff + widthRatio) * xFactor,
-                sourceHeight * (yRatio + yDiff + heightRatio) * yFactor
-        );
+                translator.contentToSourceX(xRatio),
+                translator.contentToSourceY(yRatio),
+                translator.contentToSourceX(xRatio + widthRatio),
+                translator.contentToSourceY(yRatio + heightRatio));
 
         // If out of the user image, ignore this tile
         if (sourceRect.right <= 0 ||
@@ -117,10 +98,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
             return;
         }
 
-        // Will probably draw the whole tile
+        // Will probably draw the whole tile...
         destRect.set(0, 0, canvas.getWidth(), canvas.getHeight());
 
-        // But at the edge of the user image it's possible that
+        // ... but at the edge of the user image it's possible that
         // a tile contains some empty space. Removes that space
         // for performance.
         if (sourceRect.top < 0) {
@@ -147,102 +128,43 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public final void onClick(float xRatio, float yRatio, float contentInitialWidth, float contentInitialHeight, float scale) {
-
-        // Try using source width as reference
-        float xDiff, yDiff;
-        float xFactor, yFactor;
-        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
-        float initialScale;
-        if (scaledSourceHeight <= contentInitialHeight) {
-            initialScale = contentInitialWidth / sourceWidth;
-            xDiff = 0f;
-            yDiff = -(contentInitialHeight - scaledSourceHeight) / 2f / contentInitialHeight;
-            xFactor = 1f;
-            yFactor = contentInitialHeight / scaledSourceHeight;
-        } else {
-            initialScale = contentInitialHeight / sourceHeight;
-            float scaledSourceWidth = contentInitialHeight * sourceWidth / sourceHeight;
-            xDiff = -(contentInitialWidth - scaledSourceWidth) / 2f / contentInitialWidth;
-            yDiff = 0f;
-            xFactor = contentInitialWidth / scaledSourceWidth;
-            yFactor = 1f;
-        }
-
-        float contentX = (xRatio + xDiff) * xFactor * sourceWidth;
-        float contentY = (yRatio + yDiff) * yFactor * sourceHeight;
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        float contentX = translator.contentToSourceX(xRatio);
+        float contentY = translator.contentToSourceY(yRatio);
 
         if (contentX < 0 || contentX > sourceWidth
                 || contentY < 0 || contentY > sourceHeight)
             return;
 
-        onClick(contentX, contentY, initialScale * scale);
+        onClick(contentX, contentY, translator.currentSourceScale);
     }
 
     @Override
     public void getPosition(float x, float y, PointF position) {
-        float xDiff, yDiff;
-        float xFactor, yFactor;
-        float scaledSourceHeight = tilesView.getContentWidth() * sourceHeight / sourceWidth;
-        if (scaledSourceHeight <= tilesView.getContentHeight()) {
-            xDiff = 0f;
-            yDiff = -(tilesView.getContentHeight() - scaledSourceHeight) / 2f / tilesView.getContentHeight();
-            xFactor = 1f;
-            yFactor = tilesView.getContentHeight() / scaledSourceHeight;
-        } else {
-            float scaledSourceWidth = tilesView.getContentHeight() * sourceWidth / sourceHeight;
-            xDiff = -(tilesView.getContentWidth() - scaledSourceWidth) / 2f / tilesView.getContentWidth();
-            yDiff = 0f;
-            xFactor = tilesView.getContentWidth() / scaledSourceWidth;
-            yFactor = 1f;
-        }
-
-        float contentX = (x / (xFactor * sourceWidth) - xDiff) * tilesView.getContentWidth();
-        float contentY = (y / (yFactor * sourceHeight) - yDiff) * tilesView.getContentHeight();
-
-        tilesView.getPositionInView(contentX, contentY, position);
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        tilesView.getPositionInView(
+                translator.tilesViewToSourceX(x),
+                translator.tilesViewToSourceY(y),
+                position);
     }
 
     @Override
     public final void drawLayer(Canvas canvas, float scale, float contentInitialWidth, float contentInitialHeight) {
-
-        // Try using source width as reference
-        float translateX, translateY;
-        float scaledSourceHeight = contentInitialWidth * sourceHeight / sourceWidth;
-        float sourceRatioOnZoom1;
-        if (scaledSourceHeight <= contentInitialHeight) {
-            sourceRatioOnZoom1 = contentInitialWidth / sourceWidth;
-            translateX = 0;
-            translateY = (contentInitialHeight - sourceHeight * sourceRatioOnZoom1) / 2f * scale;
-        } else {
-            sourceRatioOnZoom1 = contentInitialHeight / sourceHeight;
-            translateX = (contentInitialWidth - sourceWidth * sourceRatioOnZoom1) / 2f * scale;
-            translateY = 0;
-        }
-
-        canvas.translate(translateX, translateY);
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        canvas.translate(
+                translator.sourceToContentX(0) * translator.currentContentScale,
+                translator.sourceToContentY(0) * translator.currentContentScale);
         this.scale = scale;
-        this.sourceInitialRatio = sourceRatioOnZoom1;
+        this.sourceInitialRatio = translator.initialContentScale;
         drawLayer(canvas, scale);
     }
 
     @Override
     public void animateTo(float x, float y, int zoomLevel, AnimationCallback callback) {
-        float contentWidth = tilesView.getContentWidth();
-        float contentHeight = tilesView.getContentHeight();
-        float xDiff, yDiff, factor;
-        float scaledSourceHeight = contentWidth * sourceHeight / sourceWidth;
-        if (scaledSourceHeight <= contentHeight) {
-            factor = scaledSourceHeight / sourceHeight;
-            xDiff = 0f;
-            yDiff = (contentHeight - scaledSourceHeight) / 2f;
-        } else {
-            float scaledSourceWidth = contentHeight * sourceWidth / sourceHeight;
-            factor = scaledSourceWidth / sourceWidth;
-            xDiff = (contentWidth - scaledSourceWidth) / 2f;
-            yDiff = 0f;
-        }
-
-        tilesView.animateTo(xDiff + x * factor, yDiff + y * factor, zoomLevel, callback);
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        float xT = translator.sourceToContentX(x);
+        float yT = translator.sourceToContentY(y);
+        tilesView.animateTo(xT, yT, zoomLevel, callback);
     }
 
     @Override
@@ -262,6 +184,7 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     /**
      * Render a tile.
+     *
      * @param canvas     The canvas on which to draw the tile.
      * @param sourceRect The bounds of the tile in the source image, in pixels.
      * @param destRect   The bounds on which to draw the destination image, in pixels.
@@ -278,10 +201,80 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     /**
      * TODO JAVADOC
+     *
      * @param pixelSizeOnSourceImage
      * @return
      */
     protected float scaled(float pixelSizeOnSourceImage) {
         return pixelSizeOnSourceImage * sourceInitialRatio * scale;
+    }
+
+    private static class CenterCropTranslator {
+
+        private final static ThreadLocal<CenterCropTranslator> translatorTL = new ThreadLocal<CenterCropTranslator>();
+        public float xDiff, yDiff;
+        public float xFactor, yFactor;
+        public float initialContentScale;
+        public float currentSourceScale, currentContentScale;
+        public float contentWidth, contentHeight;
+        public float sourceWidth, sourceHeight;
+
+        public static CenterCropTranslator get(TilesView tilesView, float sourceWidth, float sourceHeight) {
+            CenterCropTranslator translator = translatorTL.get();
+            if (translator == null) {
+                translator = new CenterCropTranslator();
+                translatorTL.set(translator);
+            }
+            translator.update(tilesView, sourceWidth, sourceHeight);
+            return translator;
+        }
+
+        private void update(TilesView tilesView, float sourceWidth, float sourceHeight) {
+            this.sourceWidth = sourceWidth;
+            this.sourceHeight = sourceHeight;
+            contentWidth = tilesView.getContentWidth();
+            contentHeight = tilesView.getContentHeight();
+            float scaledSourceHeight = tilesView.getContentWidth() * sourceHeight / sourceWidth;
+            if (scaledSourceHeight <= contentHeight) {
+                initialContentScale = contentWidth / sourceWidth;
+                xDiff = 0f;
+                yDiff = -(contentHeight - scaledSourceHeight) / 2f / contentHeight;
+                xFactor = 1f;
+                yFactor = contentHeight / scaledSourceHeight;
+            } else {
+                initialContentScale = contentHeight / sourceHeight;
+                float scaledSourceWidth = contentHeight * sourceWidth / sourceHeight;
+                xDiff = -(contentWidth - scaledSourceWidth) / 2f / contentWidth;
+                yDiff = 0f;
+                xFactor = contentWidth / scaledSourceWidth;
+                yFactor = 1f;
+            }
+            currentContentScale = tilesView.getScale();
+            currentSourceScale = initialContentScale * currentContentScale;
+        }
+
+        public float tilesViewToSourceX(float x) {
+            return (x / (xFactor * sourceWidth) - xDiff) * contentWidth;
+        }
+
+        public float tilesViewToSourceY(float y) {
+            return (y / (yFactor * sourceHeight) - yDiff) * contentHeight;
+        }
+
+        public float contentToSourceX(float xRatio) {
+            return (xRatio + xDiff) * xFactor * sourceWidth;
+        }
+
+        public float contentToSourceY(float yRatio) {
+            return (yRatio + yDiff) * yFactor * sourceHeight;
+        }
+
+        public float sourceToContentX(float x) {
+            return -xDiff * contentWidth + x * initialContentScale;
+        }
+
+        public float sourceToContentY(float y) {
+            return -yDiff * contentHeight + y * initialContentScale;
+        }
     }
 }

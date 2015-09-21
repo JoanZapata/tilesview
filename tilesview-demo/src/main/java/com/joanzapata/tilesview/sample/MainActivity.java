@@ -17,14 +17,14 @@ public class MainActivity extends Activity {
         findViewById(R.id.sample1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter2FixedSize.class));
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter1Base.class));
             }
         });
 
         findViewById(R.id.sample2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter1Base.class));
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter2FixedSize.class));
             }
         });
 

@@ -1,12 +1,11 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-}
-
 allprojects {
     repositories {
         jcenter()
+    }
+    buildscript {
+       repositories {
+           jcenter()
+       }
     }
 }
 
