@@ -52,7 +52,7 @@ public interface TilesViewAdapter {
      * of the content. (unless sufficiently zoomed out)
      * @return The left overscroll, in pixels.
      */
-    int getOverscrollLeft();
+    float getOverscrollLeft();
 
     /**
      * Extra space allowed to be scrolled by the user on the right side.
@@ -63,7 +63,7 @@ public interface TilesViewAdapter {
      * of the content. (unless sufficiently zoomed out)
      * @return The right overscroll, in pixels.
      */
-    int getOverscrollRight();
+    float getOverscrollRight();
 
     /**
      * Extra space allowed to be scrolled by the user on the top.
@@ -74,7 +74,7 @@ public interface TilesViewAdapter {
      * of the content. (unless sufficiently zoomed out)
      * @return The top overscroll, in pixels.
      */
-    int getOverscrollTop();
+    float getOverscrollTop();
 
     /**
      * Extra space allowed to be scrolled by the user on the bottom.
@@ -85,7 +85,7 @@ public interface TilesViewAdapter {
      * of the content. (unless sufficiently zoomed out)
      * @return The bottom overscroll, in pixels.
      */
-    int getOverscrollBottom();
+    float getOverscrollBottom();
 
     /**
      * @return True if your implementation of {@link #drawTile(Canvas, float, float, float, float, float, float, float)} is thread safe, in which case the rendering

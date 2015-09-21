@@ -9,6 +9,9 @@ import com.joanzapata.tilesview.TilesViewAdapter;
 public abstract class DefaultAdapter implements TilesViewAdapter {
 
     private TilesView tilesView;
+    private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
+    private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
+    private float overscrollTop, overscrollRight, overscrollLeft, overscrollBottom;
 
     @Override
     public void attachTilesView(TilesView tilesView) {
@@ -17,38 +20,32 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
 
     @Override
     public int getMinZoomLevel() {
-        // Default value, can be overridden
-        return DEFAULT_MIN_ZOOM_LEVEL;
+        return minZoomLevel;
     }
 
     @Override
     public int getMaxZoomLevel() {
-        // Default value, can be overridden
-        return DEFAULT_MAX_ZOOM_LEVEL;
+        return maxZoomLevel;
     }
 
     @Override
-    public int getOverscrollLeft() {
-        // Default value, can be overridden
-        return 0;
+    public float getOverscrollLeft() {
+        return overscrollLeft;
     }
 
     @Override
-    public int getOverscrollRight() {
-        // Default value, can be overridden
-        return 0;
+    public float getOverscrollRight() {
+        return overscrollRight;
     }
 
     @Override
-    public int getOverscrollTop() {
-        // Default value, can be overridden
-        return 0;
+    public float getOverscrollTop() {
+        return overscrollTop;
     }
 
     @Override
-    public int getOverscrollBottom() {
-        // Default value, can be overridden
-        return 0;
+    public float getOverscrollBottom() {
+        return overscrollBottom;
     }
 
     @Override
@@ -93,5 +90,29 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     @Override
     public void animateTo(float x, float y) {
         animateTo(x, y, tilesView.getZoomLevel(), null);
+    }
+
+    public void setMinZoomLevel(int minZoomLevel) {
+        this.minZoomLevel = minZoomLevel;
+    }
+
+    public void setMaxZoomLevel(int maxZoomLevel) {
+        this.maxZoomLevel = maxZoomLevel;
+    }
+
+    public void setOverscrollTop(float overscrollTop) {
+        this.overscrollTop = overscrollTop;
+    }
+
+    public void setOverscrollRight(float overscrollRight) {
+        this.overscrollRight = overscrollRight;
+    }
+
+    public void setOverscrollLeft(float overscrollLeft) {
+        this.overscrollLeft = overscrollLeft;
+    }
+
+    public void setOverscrollBottom(float overscrollBottom) {
+        this.overscrollBottom = overscrollBottom;
     }
 }

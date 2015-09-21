@@ -16,6 +16,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     private float sourceInitialRatio;
     private TilesView tilesView;
 
+    private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
+    private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
+    private float overscrollTop, overscrollRight, overscrollLeft, overscrollBottom;
+
     public FixedSizeAdapter(float width, float height) {
         this.sourceWidth = width;
         this.sourceHeight = height;
@@ -30,36 +34,37 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public int getMinZoomLevel() {
-        return 0;
+        return minZoomLevel;
     }
 
     @Override
     public int getMaxZoomLevel() {
-        return 0;
+        return maxZoomLevel;
     }
 
     @Override
-    public int getOverscrollLeft() {
-        return 0;
+    public final float getOverscrollLeft() {
+        return overscrollLeft;
     }
 
     @Override
-    public int getOverscrollRight() {
-        return 0;
+    public final float getOverscrollRight() {
+        return overscrollRight;
     }
 
     @Override
-    public int getOverscrollTop() {
-        return 0;
+    public final float getOverscrollTop() {
+        return overscrollTop;
     }
 
     @Override
-    public int getOverscrollBottom() {
-        return 0;
+    public final float getOverscrollBottom() {
+        return overscrollBottom;
     }
 
     @Override
     public boolean isThreadSafe() {
+        // Default value, can be overridden
         return false;
     }
 
@@ -69,7 +74,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
                          float widthRatio, float heightRatio,
                          float contentInitialWidth, float contentInitialHeight,
                          float scale) {
-
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -197,6 +201,37 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     public void onClick(float x, float y, float scale) {
         // Default implementation does nothing
+    }
+
+    public void setMinZoomLevel(int minZoomLevel) {
+        this.minZoomLevel = minZoomLevel;
+    }
+
+    public void setMaxZoomLevel(int maxZoomLevel) {
+        this.maxZoomLevel = maxZoomLevel;
+    }
+
+    public void setOverscrollTop(float overscrollTop) {
+        this.overscrollTop = overscrollTop;
+    }
+
+    public void setOverscrollRight(float overscrollRight) {
+        this.overscrollRight = overscrollRight;
+    }
+
+    public void setOverscrollLeft(float overscrollLeft) {
+        this.overscrollLeft = overscrollLeft;
+    }
+
+    public void setOverscrollBottom(float overscrollBottom) {
+        this.overscrollBottom = overscrollBottom;
+    }
+
+    public void setOverscroll(float left, float top, float right, float bottom) {
+        setOverscrollLeft(left);
+        setOverscrollTop(top);
+        setOverscrollRight(right);
+        setOverscrollBottom(bottom);
     }
 
     /**
