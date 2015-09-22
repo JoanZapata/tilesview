@@ -9,6 +9,7 @@ import android.util.Log;
 import android.widget.Toast;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
+import com.joanzapata.tilesview.adapter.FixedSizeAdapter;
 
 import java.lang.reflect.Constructor;
 
@@ -24,6 +25,9 @@ public class BaseDemoActivity extends Activity {
         super.onCreate(savedInstanceState);
         TilesView tilesView = new TilesView(this);
         tilesView.setBackgroundColor(Color.BLACK);
+        tilesView.setPadding(30, 50, 70, 90);
+        tilesView.setContentPadding(30, 50, 70, 90);
+        tilesView.setDebug(true);
         setContentView(tilesView);
 
         String className = getIntent().getStringExtra(EXTRA_ADAPTER);

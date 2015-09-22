@@ -115,4 +115,15 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     public void setOverscrollBottom(float overscrollBottom) {
         this.overscrollBottom = overscrollBottom;
     }
+
+    public void setOverscroll(float left, float top, float right, float bottom){
+        setOverscrollLeft(left);
+        setOverscrollTop(top);
+        setOverscrollRight(right);
+        setOverscrollBottom(bottom);
+    }
+
+    public void setOverscroll(float overscroll){
+        setOverscroll(overscroll, overscroll, overscroll, overscroll);
+    }
 }

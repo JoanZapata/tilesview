@@ -3,6 +3,7 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.Log;
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -109,19 +110,19 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         // a tile contains some empty space. Removes that space
         // for performance.
         if (sourceRect.top < 0) {
-            destRect.top -= sourceRect.top * sourceInitialRatio * scale;
+            destRect.top -= sourceRect.top * translator.initialContentScale * scale;
             sourceRect.top = 0;
         }
         if (sourceRect.left < 0) {
-            destRect.left -= sourceRect.left * sourceInitialRatio * scale;
+            destRect.left -= sourceRect.left * translator.initialContentScale * scale;
             sourceRect.left = 0;
         }
         if (sourceRect.right > sourceWidth) {
-            destRect.right += (sourceWidth - sourceRect.right) * sourceInitialRatio * scale;
+            destRect.right += (sourceWidth - sourceRect.right) * translator.initialContentScale * scale;
             sourceRect.right = sourceWidth;
         }
         if (sourceRect.bottom > sourceHeight) {
-            destRect.bottom += (sourceHeight - sourceRect.bottom) * sourceInitialRatio * scale;
+            destRect.bottom += (sourceHeight - sourceRect.bottom) * translator.initialContentScale * scale;
             sourceRect.bottom = sourceHeight;
         }
 
@@ -232,6 +233,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         setOverscrollTop(top);
         setOverscrollRight(right);
         setOverscrollBottom(bottom);
+    }
+
+    public void setOverscroll(float overscroll) {
+        setOverscroll(overscroll, overscroll, overscroll, overscroll);
     }
 
     /**

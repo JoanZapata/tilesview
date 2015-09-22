@@ -2,6 +2,7 @@ package com.joanzapata.tilesview.internal;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.Log;
 import android.util.SparseArray;
 import com.joanzapata.tilesview.TilesViewAdapter;
 

@@ -24,6 +24,7 @@ public class Adapter2FixedSize extends FixedSizeAdapter {
 
     public Adapter2FixedSize(Context context) {
         super(11730, 6351);
+        setOverscroll(150);
         try {
             InputStream inputStream = context.getResources().getAssets().open("world.jpg");
             decoder = BitmapRegionDecoder.newInstance(inputStream, false);
