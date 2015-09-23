@@ -35,7 +35,6 @@ public class Adapter1Base extends DefaultAdapter {
         this.paint.setStyle(Paint.Style.STROKE);
         this.paint.setStrokeCap(Paint.Cap.BUTT);
         this.paint.setColor(Color.RED);
-        setOverscroll(30, 50, 70, 90);
     }
 
     @Override

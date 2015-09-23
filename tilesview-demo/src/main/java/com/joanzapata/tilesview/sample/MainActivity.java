@@ -17,21 +17,28 @@ public class MainActivity extends Activity {
         findViewById(R.id.sample1).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter1Base.class));
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter1Base.class, false));
             }
         });
 
         findViewById(R.id.sample2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter2FixedSize.class));
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter2FixedSize.class, false));
             }
         });
 
         findViewById(R.id.sample3).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter3FixedSizeEnhanced.class));
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter3FixedSizeEnhanced.class, false));
+            }
+        });
+
+        findViewById(R.id.sample4).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(BaseDemoActivity.newIntent(MainActivity.this, Adapter3FixedSizeEnhanced.class, false));
             }
         });
     }

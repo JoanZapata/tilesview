@@ -19,6 +19,7 @@ public class BaseDemoActivity extends Activity {
 
     private static final String TAG = BaseDemoActivity.class.getSimpleName();
     private static final String EXTRA_ADAPTER = "EXTRA_ADAPTER";
+    private static final String EXTRA_DEBUG = "EXTRA_DEBUG";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,8 +28,10 @@ public class BaseDemoActivity extends Activity {
         tilesView.setBackgroundColor(Color.BLACK);
         tilesView.setPadding(30, 50, 70, 90);
         tilesView.setContentPadding(30, 50, 70, 90);
-        tilesView.setDebug(true);
+        tilesView.setOverscroll(100);
+        tilesView.setDebug(getIntent().getBooleanExtra(EXTRA_DEBUG, false));
         setContentView(tilesView);
+
 
         String className = getIntent().getStringExtra(EXTRA_ADAPTER);
         try {
@@ -43,9 +46,10 @@ public class BaseDemoActivity extends Activity {
         }
     }
 
-    public static Intent newIntent(Context context, Class<? extends TilesViewAdapter> adapter) {
+    public static Intent newIntent(Context context, Class<? extends TilesViewAdapter> adapter, boolean debug) {
         Intent intent = new Intent(context, BaseDemoActivity.class);
         intent.putExtra(EXTRA_ADAPTER, adapter.getCanonicalName());
+        intent.putExtra(EXTRA_DEBUG, debug);
         return intent;
     }
 }

@@ -2,6 +2,7 @@ package com.joanzapata.tilesview.adapter;
 
 import android.graphics.Canvas;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -11,7 +12,6 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     private TilesView tilesView;
     private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
     private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
-    private float overscrollTop, overscrollRight, overscrollLeft, overscrollBottom;
 
     @Override
     public void attachTilesView(TilesView tilesView) {
@@ -29,29 +29,16 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public float getOverscrollLeft() {
-        return overscrollLeft;
-    }
-
-    @Override
-    public float getOverscrollRight() {
-        return overscrollRight;
-    }
-
-    @Override
-    public float getOverscrollTop() {
-        return overscrollTop;
-    }
-
-    @Override
-    public float getOverscrollBottom() {
-        return overscrollBottom;
-    }
-
-    @Override
     public boolean isThreadSafe() {
         // Default value, can be overridden
         return false;
+    }
+
+    @Override
+    public void getBounds(RectF bounds) {
+        bounds.set(0, 0,
+                tilesView.getContentWidth() * tilesView.getScale(),
+                tilesView.getContentHeight() * tilesView.getScale());
     }
 
     @Override
@@ -98,32 +85,5 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
 
     public void setMaxZoomLevel(int maxZoomLevel) {
         this.maxZoomLevel = maxZoomLevel;
-    }
-
-    public void setOverscrollTop(float overscrollTop) {
-        this.overscrollTop = overscrollTop;
-    }
-
-    public void setOverscrollRight(float overscrollRight) {
-        this.overscrollRight = overscrollRight;
-    }
-
-    public void setOverscrollLeft(float overscrollLeft) {
-        this.overscrollLeft = overscrollLeft;
-    }
-
-    public void setOverscrollBottom(float overscrollBottom) {
-        this.overscrollBottom = overscrollBottom;
-    }
-
-    public void setOverscroll(float left, float top, float right, float bottom){
-        setOverscrollLeft(left);
-        setOverscrollTop(top);
-        setOverscrollRight(right);
-        setOverscrollBottom(bottom);
-    }
-
-    public void setOverscroll(float overscroll){
-        setOverscroll(overscroll, overscroll, overscroll, overscroll);
     }
 }

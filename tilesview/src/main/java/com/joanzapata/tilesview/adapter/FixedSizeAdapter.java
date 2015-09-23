@@ -3,7 +3,6 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.util.Log;
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -19,7 +18,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
     private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
-    private float overscrollTop, overscrollRight, overscrollLeft, overscrollBottom;
 
     public FixedSizeAdapter(float width, float height) {
         this.sourceWidth = width;
@@ -44,27 +42,13 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     }
 
     @Override
-    public final float getOverscrollLeft() {
+    public void getBounds(RectF bounds) {
         CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
-        return -(translator.sourceToContentX(0) * scale) + overscrollLeft;
-    }
-
-    @Override
-    public final float getOverscrollRight() {
-        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
-        return -((translator.contentWidth - translator.sourceToContentX(sourceWidth)) * scale)+ overscrollRight;
-    }
-
-    @Override
-    public final float getOverscrollTop() {
-        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
-        return -(translator.sourceToContentY(0) * scale)+ overscrollTop;
-    }
-
-    @Override
-    public final float getOverscrollBottom() {
-        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
-        return -((translator.contentHeight - translator.sourceToContentY(sourceHeight)) * scale)+ overscrollBottom;
+        bounds.set(
+                translator.sourceToContentX(0) * translator.currentContentScale,
+                translator.sourceToContentY(0) * translator.currentContentScale,
+                translator.sourceToContentX(sourceWidth) * translator.currentContentScale,
+                translator.sourceToContentY(sourceHeight) * translator.currentContentScale);
     }
 
     @Override
@@ -214,33 +198,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     public void setMaxZoomLevel(int maxZoomLevel) {
         this.maxZoomLevel = maxZoomLevel;
-    }
-
-    public void setOverscrollTop(float overscrollTop) {
-        this.overscrollTop = overscrollTop;
-    }
-
-    public void setOverscrollRight(float overscrollRight) {
-        this.overscrollRight = overscrollRight;
-    }
-
-    public void setOverscrollLeft(float overscrollLeft) {
-        this.overscrollLeft = overscrollLeft;
-    }
-
-    public void setOverscrollBottom(float overscrollBottom) {
-        this.overscrollBottom = overscrollBottom;
-    }
-
-    public void setOverscroll(float left, float top, float right, float bottom) {
-        setOverscrollLeft(left);
-        setOverscrollTop(top);
-        setOverscrollRight(right);
-        setOverscrollBottom(bottom);
-    }
-
-    public void setOverscroll(float overscroll) {
-        setOverscroll(overscroll, overscroll, overscroll, overscroll);
     }
 
     /**

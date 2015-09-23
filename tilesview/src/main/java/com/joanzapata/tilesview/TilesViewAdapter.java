@@ -2,6 +2,7 @@ package com.joanzapata.tilesview;
 
 import android.graphics.Canvas;
 import android.graphics.PointF;
+import android.graphics.RectF;
 
 /**
  * A TilesViewAdapter is the class to implement when you
@@ -44,48 +45,22 @@ public interface TilesViewAdapter {
     int getMaxZoomLevel();
 
     /**
-     * Extra space allowed to be scrolled by the user on the left side.
-     * <br>
-     * A positive value means that the user can push the content
-     * and see some empty space between the content and the edge of the
-     * view. A negative value means the user will never see the left edge
-     * of the content. (unless sufficiently zoomed out)
-     * @return The left overscroll, in pixels.
+     * Provides the TilesView with the bounds of the content.
+     * These bounds are used to determine the user's freedom
+     * when scrolling the content.
+     * Bounds should be set regarding the size of the content at the
+     * current scale.
+     * By default you would probably want to implement it like this
+     * <pre>
+     * {@code
+     *  bounds.set(0, 0,
+     *      tilesView.getContentWidth() * tilesView.getScale(),
+     *      tilesView.getContentHeight() * tilesView.getScale());
+     * }
+     * </pre>
+     * @param bounds The bounds to set with your values.
      */
-    float getOverscrollLeft();
-
-    /**
-     * Extra space allowed to be scrolled by the user on the right side.
-     * <br>
-     * A positive value means that the user can push the content
-     * and see some empty space between the content and the edge of the
-     * view. A negative value means the user will never see the left edge
-     * of the content. (unless sufficiently zoomed out)
-     * @return The right overscroll, in pixels.
-     */
-    float getOverscrollRight();
-
-    /**
-     * Extra space allowed to be scrolled by the user on the top.
-     * <br>
-     * A positive value means that the user can push the content
-     * and see some empty space between the content and the edge of the
-     * view. A negative value means the user will never see the left edge
-     * of the content. (unless sufficiently zoomed out)
-     * @return The top overscroll, in pixels.
-     */
-    float getOverscrollTop();
-
-    /**
-     * Extra space allowed to be scrolled by the user on the bottom.
-     * <br>
-     * A positive value means that the user can push the content
-     * and see some empty space between the content and the edge of the
-     * view. A negative value means the user will never see the left edge
-     * of the content. (unless sufficiently zoomed out)
-     * @return The bottom overscroll, in pixels.
-     */
-    float getOverscrollBottom();
+    void getBounds(RectF bounds);
 
     /**
      * @return True if your implementation of {@link #drawTile(Canvas, float, float, float, float, float, float, float)} is thread safe, in which case the rendering
