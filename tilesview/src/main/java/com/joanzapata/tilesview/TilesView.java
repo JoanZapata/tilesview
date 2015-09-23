@@ -6,7 +6,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -196,6 +195,10 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         this.offsetX = -getPaddingLeft() - getContentPaddingLeft();
         this.offsetY = -getPaddingTop() - getContentPaddingTop();
         return this;
+    }
+
+    public TilesView setContentPadding(int padding) {
+        return setContentPadding(padding, padding, padding, padding);
     }
 
     public int getMinZoomLevel() {
@@ -391,41 +394,32 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             metricsPaint.setColor(0xFF5992C7);
 
             // Overscroll is the negative space between content and border (padding+contentPadding)
-            float overscrollLeft = -offsetX - getPaddingLeft() - getContentPaddingLeft();
-            if (overscrollLeft > 0) {
-                canvas.drawRect(-overscrollLeft - contentPaddingLeft,
-                        contentHeight * scale / 2 - 20,
-                        -contentPaddingLeft,
-                        contentHeight * scale / 2 + 20,
-                        metricsPaint);
-            }
-            float overscrollTop = -offsetY - getPaddingTop() - getContentPaddingTop();
-            if (overscrollTop > 0) {
-                canvas.drawRect(
-                        contentWidth * scale / 2 - 20,
-                        -overscrollTop - contentPaddingTop,
-                        contentWidth * scale / 2 + 20,
-                        -contentPaddingTop,
-                        metricsPaint);
-            }
-            float overscrollRight = getWidth() - ((contentWidth * scale) - offsetX) - getPaddingRight() - getContentPaddingRight();
-            if (overscrollRight > 0) {
-                canvas.drawRect(
-                        contentWidth * scale + contentPaddingRight,
-                        contentHeight * scale / 2 - 20,
-                        contentWidth * scale + contentPaddingRight + overscrollRight,
-                        contentHeight * scale / 2 + 20,
-                        metricsPaint);
-            }
-            float overscrollBottom = getHeight() - ((contentHeight * scale) - offsetY) - getPaddingBottom() - getContentPaddingBottom();
-            if (overscrollBottom > 0) {
-                canvas.drawRect(
-                        contentWidth * scale / 2 - 20,
-                        contentHeight * scale + contentPaddingBottom,
-                        contentWidth * scale / 2 + 20,
-                        contentHeight * scale + contentPaddingBottom + overscrollBottom,
-                        metricsPaint);
-            }
+            int overscrollBarWidth = 20;
+
+            drawRectIgnoreNegative(canvas,
+                    -adapter.getOverscrollLeft() - contentPaddingLeft,
+                    contentHeight * scale / 2 - overscrollBarWidth,
+                    -contentPaddingLeft,
+                    contentHeight * scale / 2 + overscrollBarWidth,
+                    metricsPaint);
+            drawRectIgnoreNegative(canvas,
+                    contentWidth * scale / 2 - overscrollBarWidth,
+                    -contentPaddingTop,
+                    contentWidth * scale / 2 + overscrollBarWidth,
+                    -contentPaddingTop - adapter.getOverscrollTop(),
+                    metricsPaint);
+            drawRectIgnoreNegative(canvas,
+                    contentWidth * scale + contentPaddingRight,
+                    contentHeight * scale / 2 - overscrollBarWidth,
+                    contentWidth * scale + contentPaddingRight + adapter.getOverscrollRight(),
+                    contentHeight * scale / 2 + overscrollBarWidth,
+                    metricsPaint);
+            drawRectIgnoreNegative(canvas,
+                    contentWidth * scale / 2 - overscrollBarWidth,
+                    contentHeight * scale + contentPaddingBottom,
+                    contentWidth * scale / 2 + overscrollBarWidth,
+                    contentHeight * scale + contentPaddingBottom + adapter.getOverscrollBottom(),
+                    metricsPaint);
         }
 
         canvas.restore();
@@ -584,28 +578,51 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         float contentWidth = getContentWidth();
         float contentHeight = getContentHeight();
 
-        if (scale >= 1) {
-            minOffsetX = -getPaddingLeft() - getContentPaddingLeft() - adapter.getOverscrollLeft();
-            minOffsetY = -getPaddingTop() - getContentPaddingTop() - adapter.getOverscrollTop();
-            maxOffsetX = contentWidth * scale + getPaddingRight() + getContentPaddingRight() - getWidth() + adapter.getOverscrollRight();
-            maxOffsetY = contentHeight * scale + getPaddingBottom() + getContentPaddingBottom() - getHeight() + adapter.getOverscrollBottom();
-        } else {
-            minOffsetX = -Math.max(
-                    getWidth() - contentWidth * scale - getPaddingRight() - getContentPaddingRight(),
-                    getContentPaddingLeft() + getPaddingLeft() + adapter.getOverscrollLeft());
-            minOffsetY = -Math.max(
-                    getHeight() - contentHeight * scale - getPaddingBottom() - getContentPaddingBottom(),
-                    getContentPaddingTop() + getPaddingTop() + adapter.getOverscrollTop());
-            maxOffsetX = -Math.min(
-                    getPaddingLeft() + getContentPaddingLeft(),
-                    getWidth() - getPaddingRight() - getContentPaddingRight() - contentWidth * scale + adapter.getOverscrollRight());
-            maxOffsetY = -Math.min(
-                    getPaddingTop() + getContentPaddingTop(),
-                    getHeight() - getPaddingBottom() - getContentPaddingBottom() - contentHeight * scale + adapter.getOverscrollBottom());
-        }
+//        minOffsetX = -Math.max(
+//                getWidth() - contentWidth * scale - getPaddingRight() - getContentPaddingRight(),
+//                getContentPaddingLeft() + getPaddingLeft() + adapter.getOverscrollLeft());
+//        minOffsetY = -Math.max(
+//                getHeight() - contentHeight * scale - getPaddingBottom() - getContentPaddingBottom(),
+//                getContentPaddingTop() + getPaddingTop() + adapter.getOverscrollTop());
+//        maxOffsetX = -Math.min(
+//                getPaddingLeft() + getContentPaddingLeft(),
+//                getWidth() - getPaddingRight() - getContentPaddingRight() - contentWidth * scale + adapter.getOverscrollRight());
+//        maxOffsetY = -Math.min(
+//                getPaddingTop() + getContentPaddingTop(),
+//                getHeight() - getPaddingBottom() - getContentPaddingBottom() - contentHeight * scale + adapter.getOverscrollBottom());
+
+        // THIS IS GOOD FOR OVERSCROLL
+//        minOffsetX = -(getContentPaddingLeft() + getPaddingLeft() + adapter.getOverscrollLeft());
+//        minOffsetY = -(getContentPaddingTop() + getPaddingTop() + adapter.getOverscrollTop());
+//        maxOffsetX = -(getWidth() - getPaddingRight() - getContentPaddingRight() - contentWidth * scale - adapter.getOverscrollRight());
+//        maxOffsetY = -(getHeight() - getPaddingBottom() - getContentPaddingBottom() - contentHeight * scale - adapter.getOverscrollBottom());
+
+
+        minOffsetX = -Math.max(
+                (float) getContentPaddingLeft() + getPaddingLeft() + adapter.getOverscrollLeft(),
+                (float) getWidth() - getPaddingRight() - contentWidth * scale - adapter.getOverscrollRight());
+        minOffsetY = -Math.max(
+                (float) getContentPaddingTop() + getPaddingTop() + adapter.getOverscrollTop(),
+                (float) getHeight() - getPaddingBottom() - contentHeight * scale - adapter.getOverscrollBottom());
+        maxOffsetX = -Math.min(
+                (float) getWidth() - getPaddingRight() - getContentPaddingRight() - contentWidth * scale - adapter.getOverscrollRight(),
+                (float) getPaddingLeft() + adapter.getOverscrollLeft());
+        maxOffsetY = -Math.min(
+                (float) getHeight() - getPaddingBottom() - getContentPaddingBottom() - contentHeight * scale - adapter.getOverscrollBottom(),
+                (float) getPaddingTop() + adapter.getOverscrollTop());
+
+        // If available content smaller than screen, inverse min/max
+//        Log.i("JOAN", "offsetY=" + offsetY + " offsetX=" + offsetX);
+//        Log.i("JOAN", "min=" + minOffsetX + " " + minOffsetY + " max=" + maxOffsetX + " " + maxOffsetY);
+
+//        minOffsetX = -Float.MAX_VALUE;
+//        minOffsetY = -Float.MAX_VALUE;
+//        maxOffsetX = Float.MAX_VALUE;
+//        maxOffsetY = Float.MAX_VALUE;
 
         offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
         offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
+
 
         invalidate();
         return true;
@@ -809,5 +826,13 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public float getScale() {
         return scale;
+    }
+
+    private void drawRectIgnoreNegative(Canvas canvas, float left, float top, float right, float bottom, Paint paint) {
+        float actualLeft = left < right ? left : right;
+        float actualTop = top < bottom ? top : bottom;
+        float actualRight = right > left ? right : left;
+        float actualBottom = bottom > top ? bottom : top;
+        canvas.drawRect(actualLeft, actualTop, actualRight, actualBottom, paint);
     }
 }

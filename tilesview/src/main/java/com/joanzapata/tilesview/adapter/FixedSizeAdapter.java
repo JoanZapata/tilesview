@@ -45,22 +45,26 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public final float getOverscrollLeft() {
-        return overscrollLeft;
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        return -(translator.sourceToContentX(0) * scale) + overscrollLeft;
     }
 
     @Override
     public final float getOverscrollRight() {
-        return overscrollRight;
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        return -((translator.contentWidth - translator.sourceToContentX(sourceWidth)) * scale)+ overscrollRight;
     }
 
     @Override
     public final float getOverscrollTop() {
-        return overscrollTop;
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        return -(translator.sourceToContentY(0) * scale)+ overscrollTop;
     }
 
     @Override
     public final float getOverscrollBottom() {
-        return overscrollBottom;
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        return -((translator.contentHeight - translator.sourceToContentY(sourceHeight)) * scale)+ overscrollBottom;
     }
 
     @Override
