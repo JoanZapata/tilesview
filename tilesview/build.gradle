@@ -1,10 +1,12 @@
 buildscript {
     dependencies {
         classpath rootProject.ext.androidPlugin
+        classpath 'com.github.dcendents:android-maven-plugin:1.2'
     }
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
