@@ -112,17 +112,36 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         backgroundPaint = new Paint();
         backgroundPaint.setColor(Color.BLACK);
         backgroundPaint.setStyle(Paint.Style.FILL);
-        setBackground(getBackground());
+        setBackgroundDrawable(getBackground());
+    }
+
+    public void setBackground(Drawable background) {
+        setBackgroundDrawable(background);
     }
 
     @Override
-    public void setBackground(Drawable background) {
-        if (backgroundPaint != null && background instanceof ColorDrawable) {
-            int backgroundColor = AndroidCompatUtil.getColor(background);
-            backgroundPaint.setColor(backgroundColor);
-            tilePool.setTilesBackgroundColor(backgroundColor);
+    public void setBackgroundColor(int color) {
+        setBackgroundDrawable(new ColorDrawable(color));
+    }
+
+    @Override
+    public void setBackgroundResource(int resid) {
+        setBackgroundDrawable(getResources().getDrawable(resid));
+    }
+
+    @Override
+    public void setBackgroundDrawable(Drawable background) {
+        // Don't set super background at null in super constructor.
+        if (backgroundPaint == null) {
+            super.setBackgroundDrawable(background);
+        } else {
+            if (background instanceof ColorDrawable) {
+                int backgroundColor = AndroidCompatUtil.getColor(background);
+                backgroundPaint.setColor(backgroundColor);
+                tilePool.setTilesBackgroundColor(backgroundColor);
+            }
+            super.setBackgroundDrawable(null);
         }
-        super.setBackground(null);
     }
 
     @Override
@@ -477,7 +496,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             if (tile != null && !tile.isRecycled()) {
                 // Draw the tile if any
                 reusableRectF.set(left, top, right, bottom);
-                canvas.drawBitmap(tile, null, reusableRectF, backgroundPaint);
+                canvas.drawBitmap(tile, null, reusableRectF, null);
                 tileLoaded = true;
             } else if (placeholder != null && xIndex >= 0 && yIndex >= 0) {
                 // Draw the placeholder if any
