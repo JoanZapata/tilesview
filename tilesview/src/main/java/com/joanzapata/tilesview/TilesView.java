@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.Interpolator;
+
 import com.joanzapata.tilesview.internal.Tile;
 import com.joanzapata.tilesview.internal.TilePool;
 import com.joanzapata.tilesview.util.AndroidCompatUtil;
@@ -371,7 +372,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
             canvas.restore();
         }
 
-        if (debug) {
+        if (debug && adapter != null) {
 
             // Draw content padding
             adapter.getBounds(reusableRectF);
@@ -585,27 +586,29 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     @Override
     public boolean onScroll(float distanceX, float distanceY) {
-        offsetX += distanceX;
-        offsetY += distanceY;
-        adapter.getBounds(reusableRectF);
+        if (adapter != null) {
+            offsetX += distanceX;
+            offsetY += distanceY;
+            adapter.getBounds(reusableRectF);
 
-        // Contraint the scrolling regarding the content bounds, paddings, and overscrolls
-        float minOffsetX = -Math.max(
-                getPaddingLeft() + getContentPaddingLeft() + overscrollLeft - reusableRectF.left,
-                getWidth() - getPaddingRight() - getContentPaddingRight() - reusableRectF.right);
-        float minOffsetY = -Math.max(
-                getPaddingTop() + getContentPaddingTop() + overscrollTop - reusableRectF.top,
-                getHeight() - getPaddingBottom() - getContentPaddingBottom() - reusableRectF.bottom);
-        float maxOffsetX = -Math.min(
-                getWidth() - getPaddingRight() - getContentPaddingRight() - overscrollRight - reusableRectF.right,
-                getPaddingLeft() + getContentPaddingLeft() - reusableRectF.left);
-        float maxOffsetY = -Math.min(
-                getHeight() - getPaddingBottom() - getContentPaddingBottom() - overscrollBottom - reusableRectF.bottom,
-                getPaddingTop() + getContentPaddingTop() - reusableRectF.top);
-        offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
-        offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
+            // Contraint the scrolling regarding the content bounds, paddings, and overscrolls
+            float minOffsetX = -Math.max(
+                    getPaddingLeft() + getContentPaddingLeft() + overscrollLeft - reusableRectF.left,
+                    getWidth() - getPaddingRight() - getContentPaddingRight() - reusableRectF.right);
+            float minOffsetY = -Math.max(
+                    getPaddingTop() + getContentPaddingTop() + overscrollTop - reusableRectF.top,
+                    getHeight() - getPaddingBottom() - getContentPaddingBottom() - reusableRectF.bottom);
+            float maxOffsetX = -Math.min(
+                    getWidth() - getPaddingRight() - getContentPaddingRight() - overscrollRight - reusableRectF.right,
+                    getPaddingLeft() + getContentPaddingLeft() - reusableRectF.left);
+            float maxOffsetY = -Math.min(
+                    getHeight() - getPaddingBottom() - getContentPaddingBottom() - overscrollBottom - reusableRectF.bottom,
+                    getPaddingTop() + getContentPaddingTop() - reusableRectF.top);
+            offsetX = Math.min(Math.max(offsetX, minOffsetX), maxOffsetX);
+            offsetY = Math.min(Math.max(offsetY, minOffsetY), maxOffsetY);
 
-        invalidate();
+            invalidate();
+        }
         return true;
     }
 
