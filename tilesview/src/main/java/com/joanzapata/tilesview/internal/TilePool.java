@@ -161,7 +161,7 @@ public class TilePool {
     }
 
     public void clear() {
-        executor = null;
+        adapter = null;
 
         // Stop existing executor service
         if (executor != null) {
