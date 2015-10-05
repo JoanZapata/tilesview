@@ -3,6 +3,7 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
+
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -124,11 +125,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
         float contentX = translator.contentToSourceX(xRatio);
         float contentY = translator.contentToSourceY(yRatio);
-
-        if (contentX < 0 || contentX > sourceWidth
-                || contentY < 0 || contentY > sourceHeight)
-            return;
-
         onClick(contentX, contentY, translator.currentSourceScale);
     }
 
