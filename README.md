@@ -20,6 +20,14 @@ In the example above, you can see the strength of this method: it only needs to 
 
 ### Usage
 
+Add the dependency to your `build.gradle`
+
+```groovy
+dependencies {
+    compile 'com.joanzapata.tilesview:tilesview:0.0.2'
+}
+```
+
 Put a `TilesView` in your layout.
 
 ```xml
