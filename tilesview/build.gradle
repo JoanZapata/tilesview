@@ -1,7 +1,7 @@
 buildscript {
     dependencies {
         classpath rootProject.ext.androidPlugin
-        classpath 'com.github.dcendents:android-maven-plugin:1.2'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.3'
     }
 }
 
