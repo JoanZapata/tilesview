@@ -2,8 +2,8 @@ package com.joanzapata.tilesview.internal;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.util.Log;
 import android.util.SparseArray;
+
 import com.joanzapata.tilesview.TilesViewAdapter;
 
 import static com.joanzapata.tilesview.TilesView.TILE_SIZE;
@@ -36,7 +36,6 @@ public class TilePool {
 
     public TilePool(TilePoolListener tilePoolListener) {
         this.tilePoolListener = tilePoolListener;
-        this.tilesBackgroundColor = tilesBackgroundColor;
         this.tilesByZoomLevel = new SparseArray<Tile[][]>();
         this.maxTasks = 1;
         this.nbMaxTiles = 100;
@@ -181,6 +180,25 @@ public class TilePool {
         }
     }
 
+    public Tile[] getTiles() {
+        Tile[] tiles = new Tile[nbTiles];
+        Tile tile = tileMRU;
+        int i = 0;
+        while (tile != null) {
+            tiles[i] = tile;
+            tile = tile.getOlderTile();
+            i++;
+        }
+        return tiles;
+    }
+
+    public void invalidatePlaceholder() {
+        if (placeholder != null) {
+            placeholder.recycle();
+            placeholder = null;
+        }
+    }
+
     public interface TilePoolListener {
         void onTileRendered(Tile tile);
     }
@@ -193,9 +211,9 @@ public class TilePool {
         private final Bitmap existingBitmap;
 
         public TileRenderingTask(Tile tile,
-                int xIndex, int yIndex, int zoomLevel,
-                float contentWidth, float contentHeight,
-                Bitmap existingBitmap) {
+                                 int xIndex, int yIndex, int zoomLevel,
+                                 float contentWidth, float contentHeight,
+                                 Bitmap existingBitmap) {
             this.tile = tile;
             this.xIndex = xIndex;
             this.yIndex = yIndex;

@@ -264,6 +264,31 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
         return contentPaddingBottom;
     }
 
+    private boolean intersect(float l1, float t1, float r1, float b1,
+                              float l2, float t2, float r2, float b2) {
+        return l2 < r1 && l1 < r2
+                && t2 < b1 && t1 < b2;
+    }
+
+    public void invalidateTiles(float l, float t, float r, float b) {
+        Tile[] tiles = tilePool.getTiles();
+        for (int i = 0, size = tiles.length; i < size; i++) {
+            Tile tile = tiles[i];
+            float scaledTileSize = TILE_SIZE / (tile.getZoomLevel() / 10f);
+            float tileL = tile.getxIndex() * scaledTileSize;
+            float tileT = tile.getyIndex() * scaledTileSize;
+            float tileR = tileL + scaledTileSize;
+            float tileB = tileT + scaledTileSize;
+            if (intersect(l, t, r, b, tileL, tileT, tileR, tileB)) {
+                tile.setDeleted(true);
+                if (scale != tile.getZoomLevel() / 10f)
+                    tile.setBitmap(null);
+            }
+        }
+        tilePool.invalidatePlaceholder();
+        invalidate();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         boolean viewLoaded = true;

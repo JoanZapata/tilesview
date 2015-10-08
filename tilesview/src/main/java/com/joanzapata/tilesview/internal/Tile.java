@@ -75,4 +75,8 @@ public class Tile {
     public Tile getNewerTile() {
         return newerTile;
     }
+
+    public Tile getOlderTile() {
+        return olderTile;
+    }
 }

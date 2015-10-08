@@ -206,6 +206,15 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         return pixelSizeOnSourceImage * sourceInitialRatio * scale;
     }
 
+    public final void invalidate(float l, float t, float r, float b) {
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        tilesView.invalidateTiles(
+                translator.sourceToContentX(l),
+                translator.sourceToContentY(t),
+                translator.sourceToContentX(r),
+                translator.sourceToContentY(b));
+    }
+
     private static class CenterCropTranslator {
 
         private final static ThreadLocal<CenterCropTranslator> translatorTL = new ThreadLocal<CenterCropTranslator>();
