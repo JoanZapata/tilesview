@@ -60,10 +60,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public void drawTile(Canvas canvas,
-                         float xRatio, float yRatio,
-                         float widthRatio, float heightRatio,
-                         float contentInitialWidth, float contentInitialHeight,
-                         float scale) {
+            float xRatio, float yRatio,
+            float widthRatio, float heightRatio,
+            float contentInitialWidth, float contentInitialHeight,
+            float scale) {
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -172,8 +172,20 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     }
 
     /**
+     * Animate to a position and zoom that contains the specified bounds.
+     * @param left              The left offset of the bounds.
+     * @param top               The top offset of the bounds.
+     * @param right             The right offset of the bounds.
+     * @param bottom            The bottom offset of the bounds.
+     * @param animationCallback The callback that will be called when the animation ends.
+     */
+    public void animateTo(float left, float top, float right, float bottom, AnimationCallback animationCallback) {
+        // TODO compute the appropriate zoom level
+        animateTo((left + right) / 2f, (top + bottom) / 2f, animationCallback);
+    }
+
+    /**
      * Render a tile.
-     *
      * @param canvas     The canvas on which to draw the tile.
      * @param sourceRect The bounds of the tile in the source image, in pixels.
      * @param destRect   The bounds on which to draw the destination image, in pixels.
@@ -198,7 +210,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     /**
      * TODO JAVADOC
-     *
      * @param pixelSizeOnSourceImage
      * @return
      */
