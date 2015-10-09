@@ -265,7 +265,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     private boolean intersect(float l1, float t1, float r1, float b1,
-                              float l2, float t2, float r2, float b2) {
+            float l2, float t2, float r2, float b2) {
         return l2 < r1 && l1 < r2
                 && t2 < b1 && t1 < b2;
     }
@@ -812,7 +812,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     /**
      * Return an appropriate zoom level for the given scale
      */
-    private int zoomLevelForScale(float scale, int scaleType) {
+    public int zoomLevelForScale(float scale, int scaleType) {
         double scaleFrom0x10 = Math.round(scale * 10) - 10d;
         double exactValue = Math.log(scaleFrom0x10) / Math.log(2);
         int roundedValue = (int) (scaleType == SCALE_TYPE_FLOOR ? Math.floor(exactValue) :

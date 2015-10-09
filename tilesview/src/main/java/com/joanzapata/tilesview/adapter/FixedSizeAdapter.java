@@ -180,8 +180,12 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
      * @param animationCallback The callback that will be called when the animation ends.
      */
     public void animateTo(float left, float top, float right, float bottom, AnimationCallback animationCallback) {
-        // TODO compute the appropriate zoom level
-        animateTo((left + right) / 2f, (top + bottom) / 2f, animationCallback);
+        CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
+        float minScaleX = (right - left) / translator.contentToSourceX(right - left);
+        float minScaleY = (top - bottom) / translator.contentToSourceY(top - bottom);
+        float scale = Math.max(minScaleX, minScaleY);
+        int zoomLevel = tilesView.zoomLevelForScale(scale, TilesView.SCALE_TYPE_CEIL);
+        animateTo((left + right) / 2f, (top + bottom) / 2f, zoomLevel, animationCallback);
     }
 
     /**
