@@ -3,7 +3,6 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
-
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -181,10 +180,16 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
      */
     public void animateTo(float left, float top, float right, float bottom, AnimationCallback animationCallback) {
         CenterCropTranslator translator = CenterCropTranslator.get(tilesView, sourceWidth, sourceHeight);
-        float minScaleX = (right - left) / translator.contentToSourceX(right - left);
-        float minScaleY = (top - bottom) / translator.contentToSourceY(top - bottom);
-        float scale = Math.max(minScaleX, minScaleY);
-        int zoomLevel = tilesView.zoomLevelForScale(scale, TilesView.SCALE_TYPE_CEIL);
+        float targetContentWidth = (right - left) * translator.initialContentScale;
+        float targetContentHeight = (bottom - top) * translator.initialContentScale;
+        float maxScaleX = tilesView.getContentWidth() / targetContentWidth;
+        float maxScaleY = tilesView.getContentHeight() / targetContentHeight;
+        float scale = Math.min(maxScaleX, maxScaleY);
+        int zoomLevel = (int) (scale < 1 ? scale + 10
+                : Math.log(scale * 10 - 10) / Math.log(2) + 10);
+        if (zoomLevel > tilesView.getZoomLevel()) {
+            zoomLevel = tilesView.getZoomLevel();
+        }
         animateTo((left + right) / 2f, (top + bottom) / 2f, zoomLevel, animationCallback);
     }
 
