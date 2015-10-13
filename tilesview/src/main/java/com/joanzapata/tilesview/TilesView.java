@@ -816,16 +816,17 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
      * Return an appropriate zoom level for the given scale
      */
     public int zoomLevelForScale(float scale, int scaleType) {
+        if (scale == 1) {
+            return 10;
+        } else if (scale < 1) {
+            return Math.round(scale * 10f);
+        }
         double scaleFrom0x10 = Math.round(scale * 10) - 10d;
         double exactValue = Math.log(scaleFrom0x10) / Math.log(2);
         int roundedValue = (int) (scaleType == SCALE_TYPE_FLOOR ? Math.floor(exactValue) :
                 scaleType == SCALE_TYPE_CEIL ? Math.ceil(exactValue) :
                         Math.round(exactValue));
-        int result = (int) (10 + Math.pow(2, roundedValue));
-        if (scale < 1f) {
-            result = Math.round(scale * 10f);
-        }
-        return result;
+        return (int) (10 + Math.pow(2, roundedValue));
     }
 
     @Override
