@@ -3,6 +3,7 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
+
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -10,22 +11,10 @@ import com.joanzapata.tilesview.TilesViewAdapter;
 public abstract class DefaultAdapter implements TilesViewAdapter {
 
     private TilesView tilesView;
-    private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
-    private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
 
     @Override
     public void attachTilesView(TilesView tilesView) {
         this.tilesView = tilesView;
-    }
-
-    @Override
-    public int getMinZoomLevel() {
-        return minZoomLevel;
-    }
-
-    @Override
-    public int getMaxZoomLevel() {
-        return maxZoomLevel;
     }
 
     @Override
@@ -77,13 +66,5 @@ public abstract class DefaultAdapter implements TilesViewAdapter {
     @Override
     public void animateTo(float x, float y) {
         animateTo(x, y, tilesView.getZoomLevel(), null);
-    }
-
-    public void setMinZoomLevel(int minZoomLevel) {
-        this.minZoomLevel = minZoomLevel;
-    }
-
-    public void setMaxZoomLevel(int maxZoomLevel) {
-        this.maxZoomLevel = maxZoomLevel;
     }
 }

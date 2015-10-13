@@ -21,6 +21,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public static final int TILE_SIZE = 256;
     // Zoom level starts at 10, must be 10 plus a power of 2
+    // Those MIN and MAX zoom levels only limit the tiles rendering.
     private static final int MAX_ZOOM_LEVEL = 10 + (int) Math.pow(2, 8);
     private static final int MIN_ZOOM_LEVEL = 5;
     private static final int DOUBLE_TAP_DURATION = 400;
@@ -32,11 +33,12 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     public static final int SCALE_TYPE_ROUND = 3;
 
     /**
+     * Prevent the user from reaching an inappropriate zoom level.
      * 5-9 = content is smaller than the screen
      * 10 = fit the screen
      * > 10 = zoomed in, should be a power of two
      */
-    private int userMinZoomLevel = 5, userMaxZoomLevel = (int) Math.pow(2, 8);
+    private int userMinZoomLevel = MIN_ZOOM_LEVEL, userMaxZoomLevel = 10 + (int) Math.pow(2, 16);
 
     /**
      * Add padding to the content.
@@ -265,7 +267,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
     }
 
     private boolean intersect(float l1, float t1, float r1, float b1,
-            float l2, float t2, float r2, float b2) {
+                              float l2, float t2, float r2, float b2) {
         return l2 < r1 && l1 < r2
                 && t2 < b1 && t1 < b2;
     }

@@ -3,6 +3,7 @@ package com.joanzapata.tilesview.adapter;
 import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.RectF;
+
 import com.joanzapata.tilesview.AnimationCallback;
 import com.joanzapata.tilesview.TilesView;
 import com.joanzapata.tilesview.TilesViewAdapter;
@@ -16,9 +17,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     private float sourceInitialRatio;
     private TilesView tilesView;
 
-    private int minZoomLevel = DEFAULT_MIN_ZOOM_LEVEL;
-    private int maxZoomLevel = DEFAULT_MAX_ZOOM_LEVEL;
-
     public FixedSizeAdapter(float width, float height) {
         this.sourceWidth = width;
         this.sourceHeight = height;
@@ -29,16 +27,6 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
     @Override
     public void attachTilesView(TilesView tilesView) {
         this.tilesView = tilesView;
-    }
-
-    @Override
-    public int getMinZoomLevel() {
-        return minZoomLevel;
-    }
-
-    @Override
-    public int getMaxZoomLevel() {
-        return maxZoomLevel;
     }
 
     @Override
@@ -59,10 +47,10 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     @Override
     public void drawTile(Canvas canvas,
-            float xRatio, float yRatio,
-            float widthRatio, float heightRatio,
-            float contentInitialWidth, float contentInitialHeight,
-            float scale) {
+                         float xRatio, float yRatio,
+                         float widthRatio, float heightRatio,
+                         float contentInitialWidth, float contentInitialHeight,
+                         float scale) {
 
         RectF sourceRect = sourceRectTL.get();
         if (sourceRect == null) {
@@ -172,6 +160,7 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     /**
      * Animate to a position and zoom that contains the specified bounds.
+     *
      * @param left              The left offset of the bounds.
      * @param top               The top offset of the bounds.
      * @param right             The right offset of the bounds.
@@ -187,6 +176,9 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         float scale = Math.min(maxScaleX, maxScaleY);
         int zoomLevel = (int) (scale < 1 ? scale + 10
                 : Math.log(scale * 10 - 10) / Math.log(2) + 10);
+        if (zoomLevel < tilesView.getMinZoomLevel()) {
+            zoomLevel = tilesView.getMinZoomLevel();
+        }
         if (zoomLevel > tilesView.getZoomLevel()) {
             zoomLevel = tilesView.getZoomLevel();
         }
@@ -195,6 +187,7 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
 
     /**
      * Render a tile.
+     *
      * @param canvas     The canvas on which to draw the tile.
      * @param sourceRect The bounds of the tile in the source image, in pixels.
      * @param destRect   The bounds on which to draw the destination image, in pixels.
@@ -209,16 +202,9 @@ public abstract class FixedSizeAdapter implements TilesViewAdapter {
         // Default implementation does nothing
     }
 
-    public void setMinZoomLevel(int minZoomLevel) {
-        this.minZoomLevel = minZoomLevel;
-    }
-
-    public void setMaxZoomLevel(int maxZoomLevel) {
-        this.maxZoomLevel = maxZoomLevel;
-    }
-
     /**
      * TODO JAVADOC
+     *
      * @param pixelSizeOnSourceImage
      * @return
      */

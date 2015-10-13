@@ -15,34 +15,11 @@ import android.graphics.RectF;
  */
 public interface TilesViewAdapter {
 
-    int DEFAULT_MIN_ZOOM_LEVEL = 5;
-    int DEFAULT_MAX_ZOOM_LEVEL = 256;
-
     /**
      * This is called by TilesView and should not be called by the user.
      * Used to keep a reference on the associated TilesView for animations.
      */
     void attachTilesView(TilesView tilesView);
-
-    /**
-     * Provides the minimum zoom level at which
-     * the user won't be able to zoom out again.
-     * Default is 5.
-     * @return [5-9] content is smaller than screen,
-     * [10] content fits the screen,
-     * [10-...] content is bigger than screen.
-     */
-    int getMinZoomLevel();
-
-    /**
-     * Provides the maximum zoom level at which
-     * the user won't be able to zoom in again.
-     * Default is 256.
-     * @return [5-9] content is smaller than screen,
-     * [10] content fits the screen,
-     * [10-...] content is bigger than screen.
-     */
-    int getMaxZoomLevel();
 
     /**
      * Provides the TilesView with the bounds of the content.
