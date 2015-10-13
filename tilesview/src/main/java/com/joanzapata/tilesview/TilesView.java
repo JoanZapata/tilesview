@@ -154,6 +154,7 @@ public class TilesView extends View implements ScrollAndZoomDetector.ScrollAndZo
 
     public TilesView clear() {
         if (currentAnimator != null) currentAnimator.cancel();
+        adapter = null;
         tilePool.setAdapter(null);
         scale = 1f;
         zoomLevelWithUserBounds = 10;
