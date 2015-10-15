@@ -24,7 +24,7 @@ Add the dependency to your `build.gradle`
 
 ```groovy
 dependencies {
-    compile 'com.joanzapata.tilesview:tilesview:0.0.2'
+    compile 'com.joanzapata.tilesview:tilesview:0.0.3'
 }
 ```
 
